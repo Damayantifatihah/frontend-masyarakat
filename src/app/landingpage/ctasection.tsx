@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function CtaSection() {
   return (
     <section className="bg-white py-16 px-6">
@@ -31,9 +33,12 @@ export default function CtaSection() {
 
             {/* Right */}
             <div className="flex flex-col gap-4">
-              <button className="bg-[#F57B52] hover:bg-[#e56f47] text-white font-bold text-[15px] px-8 py-4 rounded-xl shadow-md transition-all duration-300">
-                Buat Laporan Anda Sekarang
-              </button>
+             <Link
+              href="/auth/login"
+              className="bg-[#F57B52] hover:bg-[#e56f47] text-white font-bold text-[15px] px-8 py-4 rounded-xl shadow-md transition-all duration-300 text-center"
+            >
+              Buat Laporan Anda Sekarang
+            </Link>
               <button className="bg-[#F57B52] hover:bg-[#e56f47] text-white font-bold text-[15px] px-8 py-4 rounded-xl shadow-md transition-all duration-300">
                 Pelajari Selengkapnya
               </button>
