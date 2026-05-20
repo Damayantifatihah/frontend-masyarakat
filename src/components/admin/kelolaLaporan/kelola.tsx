@@ -519,32 +519,55 @@ export default function KelolaLaporan() {
   }, []);
 
   useEffect(() => {
+  fetchLaporan();
+
+  // AUTO REFRESH REALTIME
+  const interval = setInterval(() => {
     fetchLaporan();
-  }, [fetchLaporan]);
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, [fetchLaporan]);
 
   // ─── UPDATE STATUS ────────────────────────────────────────────────────────
 
   const handleStatusChange = useCallback(
-    async (id: number, newStatus: StatusDB) => {
-      try {
-        // Optimistic update
-        setData((prev) =>
-          prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
-        );
-        // Update selected jika sedang dibuka
-        setSelected((prev) =>
-          prev?.id === id ? { ...prev, status: newStatus } : prev
-        );
+  async (id: number, newStatus: StatusDB) => {
+    try {
 
-        await api.patch(`/laporan/${id}/status`, { status: newStatus });
-      } catch (err) {
-        console.error(err);
-        // Revert on error
-        fetchLaporan();
-      }
-    },
-    [fetchLaporan]
-  );
+      // OPTIMISTIC UPDATE
+      setData((prev) =>
+        prev.map((l) =>
+          l.id === id
+            ? { ...l, status: newStatus }
+            : l
+        )
+      );
+
+      // UPDATE MODAL TERBUKA
+      setSelected((prev) =>
+        prev?.id === id
+          ? { ...prev, status: newStatus }
+          : prev
+      );
+
+      // API UPDATE
+      await api.patch(`/laporan/${id}/status`, {
+        status: newStatus,
+      });
+
+      // REFRESH DATA
+      fetchLaporan();
+
+    } catch (err) {
+      console.error(err);
+
+      // BALIKIN DATA KALO ERROR
+      fetchLaporan();
+    }
+  },
+  [fetchLaporan]
+);
 
   // ─── FILTER ───────────────────────────────────────────────────────────────
 

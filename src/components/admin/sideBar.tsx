@@ -24,7 +24,7 @@ const menus = [
   },
   {
     label: "Kelola Kategori",
-    href: "/admin/kategori",
+    href: "/admin/kelola-kategori",
     icon: FolderKanban,
   },
   {

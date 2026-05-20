@@ -7,7 +7,6 @@ import api from "@/lib/axios";
 import {
   Search,
   MapPin,
-  Camera,
   Clock,
   CheckCircle2,
   XCircle,
@@ -19,16 +18,22 @@ import {
   X,
   FileX,
   MessageSquareMore,
+  CalendarDays,
 } from "lucide-react";
+
+// ─────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────
 
 interface Laporan {
   id: number;
+  user_id: number;
   judul_laporan: string;
   isi_laporan: string;
   lokasi: string;
   tanggal_kejadian: string;
   status: "verifikasi" | "proses" | "selesai" | "ditolak";
-  gambar?: string;
+  gambar?: string[];
   category_name: string;
   tanggapan?: string;
 }
@@ -39,6 +44,10 @@ type StatusKey =
   | "Selesai"
   | "Ditolak";
 
+// ─────────────────────────────────────────────
+// CATEGORY CONFIG
+// ─────────────────────────────────────────────
+
 const catCfg: Record<
   string,
   {
@@ -48,6 +57,7 @@ const catCfg: Record<
     iconColor: string;
     tagBg: string;
     tagText: string;
+    accentBorder: string;
   }
 > = {
   Infrastruktur: {
@@ -56,7 +66,8 @@ const catCfg: Record<
     iconBg: "bg-orange-50",
     iconColor: "text-orange-500",
     tagBg: "bg-orange-50",
-    tagText: "text-orange-700",
+    tagText: "text-orange-600",
+    accentBorder: "border-orange-300",
   },
 
   Penerangan: {
@@ -65,7 +76,8 @@ const catCfg: Record<
     iconBg: "bg-yellow-50",
     iconColor: "text-yellow-500",
     tagBg: "bg-yellow-50",
-    tagText: "text-yellow-700",
+    tagText: "text-yellow-600",
+    accentBorder: "border-yellow-300",
   },
 
   Kebersihan: {
@@ -74,7 +86,8 @@ const catCfg: Record<
     iconBg: "bg-green-50",
     iconColor: "text-green-500",
     tagBg: "bg-green-50",
-    tagText: "text-green-700",
+    tagText: "text-green-600",
+    accentBorder: "border-green-300",
   },
 
   Kedaruratan: {
@@ -83,7 +96,8 @@ const catCfg: Record<
     iconBg: "bg-red-50",
     iconColor: "text-red-500",
     tagBg: "bg-red-50",
-    tagText: "text-red-700",
+    tagText: "text-red-600",
+    accentBorder: "border-red-300",
   },
 
   Keindahan: {
@@ -92,7 +106,8 @@ const catCfg: Record<
     iconBg: "bg-purple-50",
     iconColor: "text-purple-500",
     tagBg: "bg-purple-50",
-    tagText: "text-purple-700",
+    tagText: "text-purple-600",
+    accentBorder: "border-purple-300",
   },
 
   Lingkungan: {
@@ -101,7 +116,8 @@ const catCfg: Record<
     iconBg: "bg-emerald-50",
     iconColor: "text-emerald-500",
     tagBg: "bg-emerald-50",
-    tagText: "text-emerald-700",
+    tagText: "text-emerald-600",
+    accentBorder: "border-emerald-300",
   },
 
   "Lalu Lintas": {
@@ -110,9 +126,24 @@ const catCfg: Record<
     iconBg: "bg-sky-50",
     iconColor: "text-sky-500",
     tagBg: "bg-sky-50",
-    tagText: "text-sky-700",
+    tagText: "text-sky-600",
+    accentBorder: "border-sky-300",
+  },
+
+  Pengaduan: {
+    Icon: MessageSquareMore,
+    bar: "bg-orange-400",
+    iconBg: "bg-orange-50",
+    iconColor: "text-orange-500",
+    tagBg: "bg-orange-50",
+    tagText: "text-orange-600",
+    accentBorder: "border-orange-300",
   },
 };
+
+// ─────────────────────────────────────────────
+// STATUS CONFIG
+// ─────────────────────────────────────────────
 
 const stCfg: Record<
   StatusKey,
@@ -172,12 +203,38 @@ const stCfg: Record<
   },
 };
 
+// ─────────────────────────────────────────────
+// FORMAT TANGGAL
+// ─────────────────────────────────────────────
+
+const formatTanggal = (raw: string): string => {
+  if (!raw) return "-";
+
+  try {
+    return new Date(raw).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return raw;
+  }
+};
+
+// ─────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────
+
 export default function LaporanSaya() {
   const [laporan, setLaporan] = useState<Laporan[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [filter, setFilter] = useState("Semua");
   const [search, setSearch] = useState("");
-  const [selId, setSelId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const [selId, setSelId] = useState<number | null>(
+    null
+  );
 
   const statuses = [
     "Semua",
@@ -187,25 +244,101 @@ export default function LaporanSaya() {
     "Ditolak",
   ];
 
-  useEffect(() => {
-    fetchLaporan();
-  }, []);
+  // ─────────────────────────────────────────────
+  // FETCH LAPORAN
+  // ─────────────────────────────────────────────
 
   const fetchLaporan = async () => {
     try {
       setLoading(true);
 
-      const res = await api.get("/laporan");
+      const token = localStorage.getItem("token");
 
-      setLaporan(res.data.data || []);
+      if (!token) {
+        setLaporan([]);
+        return;
+      }
+
+      // GET LAPORAN SAYA
+      const res = await api.get("/laporan/saya", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = res.data?.data || [];
+
+      // FORMAT GAMBAR
+      const formatted = data.map((item: any) => ({
+        ...item,
+
+        gambar: Array.isArray(item.gambar)
+          ? item.gambar
+          : typeof item.gambar === "string"
+          ? (() => {
+              try {
+                return JSON.parse(item.gambar);
+              } catch {
+                return [item.gambar];
+              }
+            })()
+          : [],
+      }));
+
+      setLaporan(formatted);
+
     } catch (error) {
-      console.log(error);
+
+      console.log(
+        "ERROR FETCH LAPORAN:",
+        error
+      );
+
+      setLaporan([]);
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
-  const formatStatus = (status: string): StatusKey => {
+  // ─────────────────────────────────────────────
+  // INIT
+  // ─────────────────────────────────────────────
+
+  useEffect(() => {
+    fetchLaporan();
+  }, []);
+
+  // ─────────────────────────────────────────────
+  // ESC CLOSE MODAL
+  // ─────────────────────────────────────────────
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelId(null);
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        handler
+      );
+    };
+  }, []);
+
+  // ─────────────────────────────────────────────
+  // FORMAT STATUS
+  // ─────────────────────────────────────────────
+
+  const formatStatus = (
+    status: string
+  ): StatusKey => {
     switch (status) {
       case "proses":
         return "Diproses";
@@ -221,12 +354,15 @@ export default function LaporanSaya() {
     }
   };
 
+  // ─────────────────────────────────────────────
+  // FILTER DATA
+  // ─────────────────────────────────────────────
+
   const filtered = laporan.filter((r) => {
-    const statusFormatted = formatStatus(r.status);
+    const sf = formatStatus(r.status);
 
     const matchStatus =
-      filter === "Semua" ||
-      statusFormatted === filter;
+      filter === "Semua" || sf === filter;
 
     const matchSearch =
       !search ||
@@ -234,41 +370,57 @@ export default function LaporanSaya() {
         .toLowerCase()
         .includes(search.toLowerCase()) ||
       r.lokasi
-        .toLowerCase()
+        ?.toLowerCase()
         .includes(search.toLowerCase());
 
     return matchStatus && matchSearch;
   });
 
+  // ─────────────────────────────────────────────
+  // COUNT STATUS
+  // ─────────────────────────────────────────────
+
   const countOf = (status: string) =>
     laporan.filter(
-      (r) => formatStatus(r.status) === status
+      (r) =>
+        formatStatus(r.status) === status
     ).length;
 
-  const sel = laporan.find((r) => r.id === selId);
+  // ─────────────────────────────────────────────
+  // SELECTED
+  // ─────────────────────────────────────────────
+
+  const sel = laporan.find(
+    (r) => r.id === selId
+  );
+
+  // ─────────────────────────────────────────────
+  // UI
+  // ─────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-white font-sans text-stone-900">
+
+      {/* CONTENT */}
       <div className="max-w-4xl mx-auto px-5 py-8 pb-20">
 
         {/* HEADER */}
-        <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
-          <div>
-            <Image
-              src="/images/logo.png"
-              alt="LaporinAja"
-              width={140}
-              height={36}
-              className="mb-3 object-contain"
-            />
+        <div className="mb-6">
+          <Image
+            src="/images/logo.png"
+            alt="LaporinAja"
+            width={140}
+            height={36}
+            className="mb-2 object-contain"
+          />
 
-            <p className="text-sm text-stone-400 mt-1">
-              Pantau semua laporan yang telah kamu kirimkan
-            </p>
-          </div>
+          <p className="text-sm text-stone-400">
+            Pantau semua laporan yang telah
+            kamu kirimkan
+          </p>
         </div>
 
-        {/* STAT */}
+        {/* STATS */}
         <div className="grid grid-cols-4 gap-3 mb-6">
           {(
             [
@@ -312,8 +464,9 @@ export default function LaporanSaya() {
           })}
         </div>
 
-        {/* TOOLBAR */}
+        {/* SEARCH */}
         <div className="flex gap-2 mb-5 flex-wrap items-center">
+
           <div className="relative flex-1 min-w-[160px]">
             <Search
               size={15}
@@ -322,12 +475,12 @@ export default function LaporanSaya() {
 
             <input
               type="text"
-              placeholder="Cari laporan atau lokasi..."
+              placeholder="Cari laporan..."
               value={search}
               onChange={(e) =>
                 setSearch(e.target.value)
               }
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-full outline-none focus:border-orange-400 focus:bg-white transition-colors placeholder:text-stone-400"
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-full outline-none"
             />
           </div>
 
@@ -336,10 +489,10 @@ export default function LaporanSaya() {
               <button
                 key={s}
                 onClick={() => setFilter(s)}
-                className={`px-4 py-2 rounded-full text-xs font-bold border transition-all ${
+                className={`px-4 py-2 rounded-full text-xs font-bold border ${
                   filter === s
-                    ? "bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-100"
-                    : "bg-white border-stone-200 text-stone-500 hover:border-orange-400 hover:text-orange-500"
+                    ? "bg-orange-500 border-orange-500 text-white"
+                    : "bg-white border-stone-200 text-stone-500"
                 }`}
               >
                 {s}
@@ -350,58 +503,51 @@ export default function LaporanSaya() {
 
         {/* LIST */}
         {loading ? (
-          <div className="text-center py-20 text-stone-400">
-            Loading...
+
+          <div className="text-center py-20 text-stone-400 text-sm">
+            Memuat laporan...
           </div>
+
         ) : filtered.length === 0 ? (
+
           <div className="text-center py-20 text-stone-400">
             <FileX
               size={44}
-              className="mx-auto mb-3 opacity-40"
+              className="mx-auto mb-3 opacity-30"
             />
 
             <p className="text-sm">
-              Tidak ada laporan ditemukan
+              Belum ada laporan
             </p>
           </div>
+
         ) : (
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {filtered.map((r, i) => {
-              const statusFormatted = formatStatus(
-                r.status
-              );
+
+            {filtered.map((r) => {
+              const sf = formatStatus(r.status);
 
               const cc =
                 catCfg[r.category_name] ??
                 catCfg["Infrastruktur"];
 
-              const sc = stCfg[statusFormatted];
-
-              const isActive = selId === r.id;
+              const sc = stCfg[sf];
 
               return (
                 <div
                   key={r.id}
-                  onClick={() =>
-                    setSelId((p) =>
-                      p === r.id ? null : r.id
-                    )
-                  }
-                  style={{
-                    animationDelay: `${i * 55}ms`,
-                  }}
-                  className={`relative bg-white rounded-2xl border overflow-hidden cursor-pointer transition-all duration-200 ${
-                    isActive
-                      ? "border-orange-400 shadow-[0_0_0_3px_rgba(234,88,12,0.12)]"
-                      : "border-stone-100 shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_28px_rgba(234,88,12,0.12)] hover:border-orange-200"
-                  }`}
+                  onClick={() => setSelId(r.id)}
+                  className="relative bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden cursor-pointer"
                 >
                   <div
                     className={`absolute top-0 left-0 right-0 h-1 ${cc.bar}`}
                   />
 
                   <div className="p-4 pt-5">
+
                     <div className="flex items-start justify-between gap-2 mb-3">
+
                       <div
                         className={`w-10 h-10 ${cc.iconBg} rounded-xl flex items-center justify-center`}
                       >
@@ -419,11 +565,11 @@ export default function LaporanSaya() {
                           className={sc.iconColor}
                         />
 
-                        {statusFormatted}
+                        {sf}
                       </span>
                     </div>
 
-                    <p className="text-sm font-bold text-stone-800 leading-snug mb-1.5">
+                    <p className="text-sm font-bold text-stone-800 mb-1.5 line-clamp-2">
                       {r.judul_laporan}
                     </p>
 
@@ -433,22 +579,17 @@ export default function LaporanSaya() {
                         className="text-orange-400"
                       />
 
-                      {r.lokasi}
+                      <span className="truncate">
+                        {r.lokasi}
+                      </span>
                     </p>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-stone-300">
-                          {r.tanggal_kejadian}
-                        </span>
-
-                        {r.gambar && (
-                          <span className="text-[11px] text-stone-400 flex items-center gap-1">
-                            <Camera size={11} />
-                            Foto
-                          </span>
+                      <span className="text-[11px] text-stone-300">
+                        {formatTanggal(
+                          r.tanggal_kejadian
                         )}
-                      </div>
+                      </span>
 
                       <span
                         className={`text-[11px] font-bold px-2 py-0.5 rounded-lg ${cc.tagBg} ${cc.tagText}`}
@@ -460,141 +601,179 @@ export default function LaporanSaya() {
                 </div>
               );
             })}
+
           </div>
         )}
       </div>
 
-      {/* DETAIL */}
-      {sel && (
-        <div
-          className="fixed inset-0 bg-black/35 backdrop-blur-sm z-50 flex items-end justify-center"
-          onClick={() => setSelId(null)}
-        >
+      {/* MODAL */}
+      {sel && (() => {
+
+        const cc =
+          catCfg[sel.category_name] ??
+          catCfg["Infrastruktur"];
+
+        const sf = formatStatus(sel.status);
+
+        const sc = stCfg[sf];
+
+        return (
           <div
-            className="w-full max-w-lg bg-white rounded-t-3xl px-6 pt-5 pb-10 max-h-[85vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+            onClick={() => setSelId(null)}
           >
-            <div className="w-10 h-1 bg-stone-200 rounded-full mx-auto mb-4" />
+            <div
+              className="w-full sm:max-w-lg bg-white rounded-3xl max-h-[90vh] overflow-y-auto"
+              onClick={(e) =>
+                e.stopPropagation()
+              }
+            >
+              <div className="p-5 space-y-5">
 
-            <div className="flex justify-end mb-1">
-              <button
-                onClick={() => setSelId(null)}
-                className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500"
-              >
-                <X size={14} />
-              </button>
-            </div>
+                {/* TOP */}
+                <div className="flex items-center justify-between">
 
-            {(() => {
-              const statusFormatted = formatStatus(
-                sel.status
-              );
-
-              const cc =
-                catCfg[sel.category_name] ??
-                catCfg["Infrastruktur"];
-
-              const sc = stCfg[statusFormatted];
-
-              return (
-                <>
-                  <div className="flex gap-3 items-start mb-5">
+                  <div className="flex items-center gap-2">
                     <div
-                      className={`w-12 h-12 ${cc.iconBg} rounded-2xl flex items-center justify-center`}
+                      className={`w-9 h-9 ${cc.iconBg} rounded-xl flex items-center justify-center`}
                     >
                       <cc.Icon
-                        size={24}
+                        size={18}
                         className={cc.iconColor}
                       />
                     </div>
 
-                    <div>
-                      <p className="text-base font-extrabold text-stone-800 leading-snug mb-1.5">
-                        {sel.judul_laporan}
-                      </p>
-
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${sc.bg} ${sc.text} ${sc.border}`}
-                      >
-                        <sc.Icon
-                          size={11}
-                          className={sc.iconColor}
-                        />
-
-                        {statusFormatted}
-                      </span>
-                    </div>
+                    <span
+                      className={`text-[12px] font-bold px-3 py-1 rounded-full border ${cc.tagBg} ${cc.tagText}`}
+                    >
+                      {sel.category_name}
+                    </span>
                   </div>
 
-                  <div className="h-px bg-stone-100 mb-4" />
+                  <button
+                    onClick={() =>
+                      setSelId(null)
+                    }
+                    className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 mb-1">
-                        Tanggal
-                      </p>
+                {/* TITLE */}
+                <div className="flex items-start gap-3">
 
-                      <p className="text-sm font-semibold text-stone-800">
-                        {sel.tanggal_kejadian}
-                      </p>
-                    </div>
+                  <h2 className="text-[15px] font-bold text-stone-800 flex-1">
+                    {sel.judul_laporan}
+                  </h2>
 
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 mb-1">
-                        Kategori
-                      </p>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${sc.bg} ${sc.text} ${sc.border}`}
+                  >
+                    <sc.Icon
+                      size={11}
+                      className={sc.iconColor}
+                    />
 
-                      <p className="text-sm font-semibold text-stone-800">
-                        {sel.category_name}
-                      </p>
-                    </div>
+                    {sf}
+                  </span>
+                </div>
 
-                    <div className="col-span-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 mb-1">
-                        Lokasi
-                      </p>
+                {/* INFO */}
+                <div className="grid grid-cols-2 gap-2">
 
-                      <p className="text-sm font-semibold text-stone-800 flex items-center gap-1">
-                        <MapPin
-                          size={13}
-                          className="text-orange-400"
-                        />
+                  <div className="bg-stone-50 rounded-xl p-3">
+                    <p className="text-[10px] text-stone-400 mb-1">
+                      Lokasi
+                    </p>
 
-                        {sel.lokasi}
-                      </p>
-                    </div>
+                    <p className="text-[13px] font-semibold text-stone-700">
+                      {sel.lokasi}
+                    </p>
                   </div>
 
-                  <div className="h-px bg-stone-100 mb-4" />
+                  <div className="bg-stone-50 rounded-xl p-3">
+                    <p className="text-[10px] text-stone-400 mb-1">
+                      Tanggal
+                    </p>
 
-                  <p className="text-sm text-stone-500 leading-relaxed bg-stone-50 rounded-xl px-4 py-3 mb-5">
-                    {sel.isi_laporan}
+                    <p className="text-[13px] font-semibold text-stone-700">
+                      {formatTanggal(
+                        sel.tanggal_kejadian
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* DESKRIPSI */}
+                <div>
+                  <p className="text-[10px] font-semibold text-stone-400 uppercase mb-2">
+                    Deskripsi
                   </p>
 
-                  {sel.tanggapan && (
-                    <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
+                  <div
+                    className={`rounded-xl p-4 bg-stone-50 border-l-[3px] ${cc.accentBorder}`}
+                  >
+                    <p className="text-sm text-stone-600 whitespace-pre-wrap">
+                      {sel.isi_laporan}
+                    </p>
+                  </div>
+                </div>
+
+                {/* FOTO */}
+                {sel.gambar &&
+                  sel.gambar.length > 0 && (
+
+                  <div>
+                    <p className="text-[10px] font-semibold text-stone-400 uppercase mb-2">
+                      Foto Laporan
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3">
+
+                      {sel.gambar.map(
+                        (img, idx) => (
+                          <img
+                            key={idx}
+                            src={`${process.env.NEXT_PUBLIC_API_URL}/uploads/${img}`}
+                            alt="foto laporan"
+                            className="w-full h-40 object-cover rounded-2xl border border-stone-100"
+                          />
+                        )
+                      )}
+
+                    </div>
+                  </div>
+                )}
+
+                {/* TANGGAPAN */}
+                {sel.tanggapan && (
+                  <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+
+                      <div className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center">
                         <MessageSquareMore
-                          size={18}
+                          size={14}
                           className="text-orange-500"
                         />
-
-                        <h3 className="text-sm font-bold text-orange-700">
-                          Tanggapan Admin
-                        </h3>
                       </div>
 
-                      <p className="text-sm text-orange-700 leading-relaxed">
-                        {sel.tanggapan}
-                      </p>
+                      <h3 className="text-sm font-bold text-orange-700">
+                        Tanggapan Admin
+                      </h3>
                     </div>
-                  )}
-                </>
-              );
-            })()}
+
+                    <p className="text-sm text-orange-700">
+                      {sel.tanggapan}
+                    </p>
+                  </div>
+                )}
+
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
