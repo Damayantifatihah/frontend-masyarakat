@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import api from "@/lib/axios";
+
 import {
-  Plus,
   Search,
   MapPin,
   Camera,
@@ -16,32 +17,30 @@ import {
   TriangleAlert,
   Palette,
   X,
-  Pencil,
-  Trash2,
   FileX,
-  Lock,
+  MessageSquareMore,
 } from "lucide-react";
 
-const data = [
-  { id: 1, title: "Jalan berlubang depan SDN 04", cat: "Infrastruktur", date: "12 Mei 2026", status: "Diproses", loc: "Jl. Margonda Raya, Depok", desc: "Terdapat lubang besar di tengah jalan yang membahayakan pengendara, sudah berlangsung selama 2 minggu.", photo: true },
-  { id: 2, title: "Lampu jalan mati di gang Mawar", cat: "Penerangan", date: "10 Mei 2026", status: "Selesai", loc: "Gang Mawar No. 5, Depok", desc: "Lampu jalan padam sejak sepekan lalu, warga kesulitan beraktivitas saat malam hari.", photo: true },
-  { id: 3, title: "Sampah menumpuk di pinggir kali", cat: "Kebersihan", date: "8 Mei 2026", status: "Selesai", loc: "Kali Ciliwung, Depok Timur", desc: "Tumpukan sampah di tepi kali menimbulkan bau tidak sedap dan berpotensi menyebabkan banjir.", photo: false },
-  { id: 4, title: "Drainase tersumbat RT 03", cat: "Infrastruktur", date: "5 Mei 2026", status: "Diproses", loc: "RT 03/RW 07, Beji, Depok", desc: "Saluran air tersumbat sampah dan tanah, menyebabkan genangan setiap kali hujan deras.", photo: true },
-  { id: 5, title: "Pohon tumbang menutup jalan", cat: "Kedaruratan", date: "2 Mei 2026", status: "Selesai", loc: "Jl. Raya Bogor KM 32", desc: "Pohon besar tumbang setelah hujan deras, menutup sebagian badan jalan utama.", photo: true },
-  { id: 6, title: "Vandalisme tembok taman kota", cat: "Keindahan", date: "28 Apr 2026", status: "Ditolak", loc: "Taman Kota Depok", desc: "Tembok taman dicoret-coret dengan cat. Laporan ditolak karena duplikat laporan sebelumnya.", photo: false },
-];
+interface Laporan {
+  id: number;
+  judul_laporan: string;
+  isi_laporan: string;
+  lokasi: string;
+  tanggal_kejadian: string;
+  status: "verifikasi" | "proses" | "selesai" | "ditolak";
+  gambar?: string;
+  category_name: string;
+  tanggapan?: string;
+}
 
-type CatKey =
-  | "Infrastruktur"
-  | "Penerangan"
-  | "Kebersihan"
-  | "Kedaruratan"
-  | "Keindahan";
-
-type StatusKey = "Diproses" | "Selesai" | "Ditolak";
+type StatusKey =
+  | "Verifikasi"
+  | "Diproses"
+  | "Selesai"
+  | "Ditolak";
 
 const catCfg: Record<
-  CatKey,
+  string,
   {
     Icon: React.ElementType;
     bar: string;
@@ -59,6 +58,7 @@ const catCfg: Record<
     tagBg: "bg-orange-50",
     tagText: "text-orange-700",
   },
+
   Penerangan: {
     Icon: Lightbulb,
     bar: "bg-yellow-400",
@@ -67,6 +67,7 @@ const catCfg: Record<
     tagBg: "bg-yellow-50",
     tagText: "text-yellow-700",
   },
+
   Kebersihan: {
     Icon: Recycle,
     bar: "bg-green-400",
@@ -75,6 +76,7 @@ const catCfg: Record<
     tagBg: "bg-green-50",
     tagText: "text-green-700",
   },
+
   Kedaruratan: {
     Icon: TriangleAlert,
     bar: "bg-red-400",
@@ -83,6 +85,7 @@ const catCfg: Record<
     tagBg: "bg-red-50",
     tagText: "text-red-700",
   },
+
   Keindahan: {
     Icon: Palette,
     bar: "bg-purple-400",
@@ -90,6 +93,24 @@ const catCfg: Record<
     iconColor: "text-purple-500",
     tagBg: "bg-purple-50",
     tagText: "text-purple-700",
+  },
+
+  Lingkungan: {
+    Icon: Recycle,
+    bar: "bg-emerald-400",
+    iconBg: "bg-emerald-50",
+    iconColor: "text-emerald-500",
+    tagBg: "bg-emerald-50",
+    tagText: "text-emerald-700",
+  },
+
+  "Lalu Lintas": {
+    Icon: Construction,
+    bar: "bg-sky-400",
+    iconBg: "bg-sky-50",
+    iconColor: "text-sky-500",
+    tagBg: "bg-sky-50",
+    tagText: "text-sky-700",
   },
 };
 
@@ -106,6 +127,17 @@ const stCfg: Record<
     statIconBg: string;
   }
 > = {
+  Verifikasi: {
+    Icon: Clock,
+    iconColor: "text-blue-500",
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    border: "border-blue-200",
+    statNum: "text-blue-600",
+    statBar: "bg-blue-400",
+    statIconBg: "bg-blue-50",
+  },
+
   Diproses: {
     Icon: Clock,
     iconColor: "text-amber-500",
@@ -116,6 +148,7 @@ const stCfg: Record<
     statBar: "bg-amber-400",
     statIconBg: "bg-amber-50",
   },
+
   Selesai: {
     Icon: CheckCircle2,
     iconColor: "text-green-500",
@@ -126,6 +159,7 @@ const stCfg: Record<
     statBar: "bg-green-400",
     statIconBg: "bg-green-50",
   },
+
   Ditolak: {
     Icon: XCircle,
     iconColor: "text-red-500",
@@ -139,32 +173,85 @@ const stCfg: Record<
 };
 
 export default function LaporanSaya() {
+  const [laporan, setLaporan] = useState<Laporan[]>([]);
   const [filter, setFilter] = useState("Semua");
   const [search, setSearch] = useState("");
   const [selId, setSelId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const statuses = ["Semua", "Diproses", "Selesai", "Ditolak"];
+  const statuses = [
+    "Semua",
+    "Verifikasi",
+    "Diproses",
+    "Selesai",
+    "Ditolak",
+  ];
 
-  const filtered = data.filter((r) => {
-    const ms = filter === "Semua" || r.status === filter;
-    const mq =
+  useEffect(() => {
+    fetchLaporan();
+  }, []);
+
+  const fetchLaporan = async () => {
+    try {
+      setLoading(true);
+
+      const res = await api.get("/laporan");
+
+      setLaporan(res.data.data || []);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatStatus = (status: string): StatusKey => {
+    switch (status) {
+      case "proses":
+        return "Diproses";
+
+      case "selesai":
+        return "Selesai";
+
+      case "ditolak":
+        return "Ditolak";
+
+      default:
+        return "Verifikasi";
+    }
+  };
+
+  const filtered = laporan.filter((r) => {
+    const statusFormatted = formatStatus(r.status);
+
+    const matchStatus =
+      filter === "Semua" ||
+      statusFormatted === filter;
+
+    const matchSearch =
       !search ||
-      r.title.toLowerCase().includes(search.toLowerCase()) ||
-      r.loc.toLowerCase().includes(search.toLowerCase());
+      r.judul_laporan
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      r.lokasi
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-    return ms && mq;
+    return matchStatus && matchSearch;
   });
 
-  const countOf = (s: string) =>
-    data.filter((r) => r.status === s).length;
+  const countOf = (status: string) =>
+    laporan.filter(
+      (r) => formatStatus(r.status) === status
+    ).length;
 
-  const sel = data.find((r) => r.id === selId);
+  const sel = laporan.find((r) => r.id === selId);
 
   return (
     <div className="min-h-screen bg-white font-sans text-stone-900">
       <div className="max-w-4xl mx-auto px-5 py-8 pb-20">
 
-        {/* TOP BAR */}
+        {/* HEADER */}
         <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
           <div>
             <Image
@@ -179,16 +266,18 @@ export default function LaporanSaya() {
               Pantau semua laporan yang telah kamu kirimkan
             </p>
           </div>
-
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-sm font-bold rounded-full transition-all shadow-md shadow-orange-200">
-            <Plus size={16} />
-            Buat Laporan
-          </button>
         </div>
 
         {/* STAT */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {(["Diproses", "Selesai", "Ditolak"] as StatusKey[]).map((s) => {
+        <div className="grid grid-cols-4 gap-3 mb-6">
+          {(
+            [
+              "Verifikasi",
+              "Diproses",
+              "Selesai",
+              "Ditolak",
+            ] as StatusKey[]
+          ).map((s) => {
             const c = stCfg[s];
 
             return (
@@ -197,13 +286,16 @@ export default function LaporanSaya() {
                 className="relative bg-white rounded-2xl p-4 border border-stone-100 shadow-sm overflow-hidden"
               >
                 <div
-                  className={`absolute top-0 left-0 right-0 h-1 ${c.statBar} rounded-t-2xl`}
+                  className={`absolute top-0 left-0 right-0 h-1 ${c.statBar}`}
                 />
 
                 <div
                   className={`w-9 h-9 ${c.statIconBg} rounded-xl flex items-center justify-center mb-2`}
                 >
-                  <c.Icon size={18} className={c.iconColor} />
+                  <c.Icon
+                    size={18}
+                    className={c.iconColor}
+                  />
                 </div>
 
                 <div
@@ -232,7 +324,9 @@ export default function LaporanSaya() {
               type="text"
               placeholder="Cari laporan atau lokasi..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
               className="w-full pl-9 pr-4 py-2.5 text-sm bg-stone-50 border border-stone-200 rounded-full outline-none focus:border-orange-400 focus:bg-white transition-colors placeholder:text-stone-400"
             />
           </div>
@@ -254,19 +348,34 @@ export default function LaporanSaya() {
           </div>
         </div>
 
-        {/* GRID */}
-        {filtered.length === 0 ? (
+        {/* LIST */}
+        {loading ? (
           <div className="text-center py-20 text-stone-400">
-            <FileX size={44} className="mx-auto mb-3 opacity-40" />
-            <p className="text-sm">Tidak ada laporan ditemukan</p>
+            Loading...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 text-stone-400">
+            <FileX
+              size={44}
+              className="mx-auto mb-3 opacity-40"
+            />
+
+            <p className="text-sm">
+              Tidak ada laporan ditemukan
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filtered.map((r, i) => {
-              const cc =
-                catCfg[r.cat as CatKey] ?? catCfg["Infrastruktur"];
+              const statusFormatted = formatStatus(
+                r.status
+              );
 
-              const sc = stCfg[r.status as StatusKey];
+              const cc =
+                catCfg[r.category_name] ??
+                catCfg["Infrastruktur"];
+
+              const sc = stCfg[statusFormatted];
 
               const isActive = selId === r.id;
 
@@ -274,15 +383,18 @@ export default function LaporanSaya() {
                 <div
                   key={r.id}
                   onClick={() =>
-                    setSelId((p) => (p === r.id ? null : r.id))
+                    setSelId((p) =>
+                      p === r.id ? null : r.id
+                    )
                   }
-                  style={{ animationDelay: `${i * 55}ms` }}
-                  className={`relative bg-white rounded-2xl border overflow-hidden cursor-pointer transition-all duration-200
-                    ${
-                      isActive
-                        ? "border-orange-400 shadow-[0_0_0_3px_rgba(234,88,12,0.12)]"
-                        : "border-stone-100 shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_28px_rgba(234,88,12,0.12)] hover:border-orange-200"
-                    }`}
+                  style={{
+                    animationDelay: `${i * 55}ms`,
+                  }}
+                  className={`relative bg-white rounded-2xl border overflow-hidden cursor-pointer transition-all duration-200 ${
+                    isActive
+                      ? "border-orange-400 shadow-[0_0_0_3px_rgba(234,88,12,0.12)]"
+                      : "border-stone-100 shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_28px_rgba(234,88,12,0.12)] hover:border-orange-200"
+                  }`}
                 >
                   <div
                     className={`absolute top-0 left-0 right-0 h-1 ${cc.bar}`}
@@ -291,7 +403,7 @@ export default function LaporanSaya() {
                   <div className="p-4 pt-5">
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div
-                        className={`w-10 h-10 ${cc.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}
+                        className={`w-10 h-10 ${cc.iconBg} rounded-xl flex items-center justify-center`}
                       >
                         <cc.Icon
                           size={20}
@@ -306,31 +418,34 @@ export default function LaporanSaya() {
                           size={11}
                           className={sc.iconColor}
                         />
-                        {r.status}
+
+                        {statusFormatted}
                       </span>
                     </div>
 
                     <p className="text-sm font-bold text-stone-800 leading-snug mb-1.5">
-                      {r.title}
+                      {r.judul_laporan}
                     </p>
 
                     <p className="text-xs text-stone-400 flex items-center gap-1 mb-4">
                       <MapPin
                         size={12}
-                        className="text-orange-400 flex-shrink-0"
+                        className="text-orange-400"
                       />
-                      {r.loc}
+
+                      {r.lokasi}
                     </p>
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] text-stone-300">
-                          {r.date}
+                          {r.tanggal_kejadian}
                         </span>
 
-                        {r.photo && (
+                        {r.gambar && (
                           <span className="text-[11px] text-stone-400 flex items-center gap-1">
-                            <Camera size={11} /> Foto
+                            <Camera size={11} />
+                            Foto
                           </span>
                         )}
                       </div>
@@ -338,7 +453,7 @@ export default function LaporanSaya() {
                       <span
                         className={`text-[11px] font-bold px-2 py-0.5 rounded-lg ${cc.tagBg} ${cc.tagText}`}
                       >
-                        {r.cat}
+                        {r.category_name}
                       </span>
                     </div>
                   </div>
@@ -349,7 +464,7 @@ export default function LaporanSaya() {
         )}
       </div>
 
-      {/* DRAWER */}
+      {/* DETAIL */}
       {sel && (
         <div
           className="fixed inset-0 bg-black/35 backdrop-blur-sm z-50 flex items-end justify-center"
@@ -364,26 +479,28 @@ export default function LaporanSaya() {
             <div className="flex justify-end mb-1">
               <button
                 onClick={() => setSelId(null)}
-                className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 transition-colors"
+                className="w-7 h-7 rounded-lg bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500"
               >
                 <X size={14} />
               </button>
             </div>
 
             {(() => {
+              const statusFormatted = formatStatus(
+                sel.status
+              );
+
               const cc =
-                catCfg[sel.cat as CatKey] ??
+                catCfg[sel.category_name] ??
                 catCfg["Infrastruktur"];
 
-              const sc = stCfg[sel.status as StatusKey];
-
-              const isProcessing = sel.status === "Diproses";
+              const sc = stCfg[statusFormatted];
 
               return (
                 <>
                   <div className="flex gap-3 items-start mb-5">
                     <div
-                      className={`w-12 h-12 ${cc.iconBg} rounded-2xl flex items-center justify-center flex-shrink-0`}
+                      className={`w-12 h-12 ${cc.iconBg} rounded-2xl flex items-center justify-center`}
                     >
                       <cc.Icon
                         size={24}
@@ -393,7 +510,7 @@ export default function LaporanSaya() {
 
                     <div>
                       <p className="text-base font-extrabold text-stone-800 leading-snug mb-1.5">
-                        {sel.title}
+                        {sel.judul_laporan}
                       </p>
 
                       <span
@@ -403,7 +520,8 @@ export default function LaporanSaya() {
                           size={11}
                           className={sc.iconColor}
                         />
-                        {sel.status}
+
+                        {statusFormatted}
                       </span>
                     </div>
                   </div>
@@ -417,7 +535,7 @@ export default function LaporanSaya() {
                       </p>
 
                       <p className="text-sm font-semibold text-stone-800">
-                        {sel.date}
+                        {sel.tanggal_kejadian}
                       </p>
                     </div>
 
@@ -427,7 +545,7 @@ export default function LaporanSaya() {
                       </p>
 
                       <p className="text-sm font-semibold text-stone-800">
-                        {sel.cat}
+                        {sel.category_name}
                       </p>
                     </div>
 
@@ -439,39 +557,10 @@ export default function LaporanSaya() {
                       <p className="text-sm font-semibold text-stone-800 flex items-center gap-1">
                         <MapPin
                           size={13}
-                          className="text-orange-400 flex-shrink-0"
+                          className="text-orange-400"
                         />
-                        {sel.loc}
-                      </p>
-                    </div>
 
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 mb-1">
-                        ID Laporan
-                      </p>
-
-                      <p className="text-sm font-semibold text-stone-400">
-                        #LP-00{sel.id}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-widest text-stone-400 mb-1">
-                        Foto
-                      </p>
-
-                      <p className="text-sm font-semibold text-stone-800 flex items-center gap-1">
-                        {sel.photo ? (
-                          <>
-                            <Camera
-                              size={13}
-                              className="text-stone-400"
-                            />
-                            Tersedia
-                          </>
-                        ) : (
-                          "—"
-                        )}
+                        {sel.lokasi}
                       </p>
                     </div>
                   </div>
@@ -479,8 +568,27 @@ export default function LaporanSaya() {
                   <div className="h-px bg-stone-100 mb-4" />
 
                   <p className="text-sm text-stone-500 leading-relaxed bg-stone-50 rounded-xl px-4 py-3 mb-5">
-                    {sel.desc}
+                    {sel.isi_laporan}
                   </p>
+
+                  {sel.tanggapan && (
+                    <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MessageSquareMore
+                          size={18}
+                          className="text-orange-500"
+                        />
+
+                        <h3 className="text-sm font-bold text-orange-700">
+                          Tanggapan Admin
+                        </h3>
+                      </div>
+
+                      <p className="text-sm text-orange-700 leading-relaxed">
+                        {sel.tanggapan}
+                      </p>
+                    </div>
+                  )}
                 </>
               );
             })()}

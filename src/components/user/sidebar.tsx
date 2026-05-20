@@ -23,44 +23,55 @@ const defaultUser = {
 function buildUserState(base: { name?: string; bio?: string }) {
   const name = base.name || "User";
   const bio = base.bio || "";
+
   const initials = name
     .split(" ")
     .map((word: string) => word[0])
+    .slice(0, 2)
     .join("")
     .toUpperCase();
-  return { name, bio, initials };
+
+  return {
+    name,
+    bio,
+    initials,
+  };
 }
 
 export default function Sidebar() {
   const pathname = usePathname();
+
   const [hovered, setHovered] = useState<string | null>(null);
+
   const [user, setUser] = useState(defaultUser);
 
-  // Baca data user: gabungkan getUser() + override dari localStorage "userProfile"
+  // ==============================
+  // LOAD USER
+  // ==============================
   const loadUser = () => {
     const currentUser = getUser();
-    const base = currentUser ? { name: currentUser.name, bio: currentUser.bio } : {};
 
-    // Ambil bio dari hasil edit profil — nama TIDAK di-override, selalu dari auth
-    try {
-      const saved = localStorage.getItem("userProfile");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        base.bio = parsed.bio ?? base.bio;
-      }
-    } catch {
-      // ignore parse error
+    if (currentUser) {
+      setUser(
+        buildUserState({
+          name: currentUser.name,
+          bio: currentUser.bio,
+        })
+      );
     }
-
-    setUser(buildUserState(base));
   };
 
+  // ==============================
+  // FIRST LOAD + REALTIME UPDATE
+  // ==============================
   useEffect(() => {
     loadUser();
 
-    // Update sidebar setiap kali ProfilePage dispatch event "storage"
     window.addEventListener("storage", loadUser);
-    return () => window.removeEventListener("storage", loadUser);
+
+    return () => {
+      window.removeEventListener("storage", loadUser);
+    };
   }, []);
 
   return (
@@ -75,7 +86,7 @@ export default function Sidebar() {
         fontFamily: "'Plus Jakarta Sans', 'Segoe UI', sans-serif",
       }}
     >
-      {/* Logo */}
+      {/* LOGO */}
       <div
         style={{
           padding: "24px 24px 20px",
@@ -91,18 +102,28 @@ export default function Sidebar() {
         />
       </div>
 
-      {/* User Profile */}
+      {/* PROFILE */}
       <div style={{ padding: "20px 20px 16px" }}>
-        <Link href="/user/profile" style={{ textDecoration: "none" }}>
+        <Link
+          href="/user/profile"
+          style={{ textDecoration: "none" }}
+        >
           <div
             style={{
-              backgroundColor: hovered === "profile" ? "#D96A30" : "#E8763A",
+              backgroundColor:
+                hovered === "profile"
+                  ? "#D96A30"
+                  : "#E8763A",
+
               borderRadius: "14px",
               padding: "14px 16px",
+
               display: "flex",
               alignItems: "center",
               gap: "12px",
+
               cursor: "pointer",
+
               transition: "background-color 0.15s",
             }}
             onMouseEnter={() => setHovered("profile")}
@@ -115,26 +136,36 @@ export default function Sidebar() {
                 height: "44px",
                 borderRadius: "50%",
                 backgroundColor: "rgba(255,255,255,0.25)",
+
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+
                 fontSize: "15px",
                 fontWeight: 700,
                 color: "#fff",
+
                 flexShrink: 0,
               }}
             >
               {user.initials}
             </div>
 
-            {/* User Info */}
-            <div style={{ overflow: "hidden", flex: 1 }}>
+            {/* USER INFO */}
+            <div
+              style={{
+                overflow: "hidden",
+                flex: 1,
+              }}
+            >
+              {/* NAME */}
               <p
                 style={{
                   margin: 0,
                   fontSize: "15px",
                   fontWeight: 700,
                   color: "#fff",
+
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -143,13 +174,14 @@ export default function Sidebar() {
                 {user.name}
               </p>
 
-              {/* FIX: bio sekarang muncul karena loadUser() baca dari localStorage "userProfile" */}
+              {/* BIO */}
               {user.bio && (
                 <p
                   style={{
                     margin: "4px 0 0",
                     fontSize: "11px",
                     color: "rgba(255,255,255,0.75)",
+
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -160,17 +192,29 @@ export default function Sidebar() {
               )}
             </div>
 
-            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "18px" }}>
+            {/* ARROW */}
+            <span
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: "18px",
+              }}
+            >
               ›
             </span>
           </div>
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav style={{ padding: "8px 16px", flex: 1 }}>
+      {/* NAVIGATION */}
+      <nav
+        style={{
+          padding: "8px 16px",
+          flex: 1,
+        }}
+      >
         {navItems.map(({ label, href, icon: Icon }) => {
           const isActive = pathname === href;
+
           const isHovered = hovered === href;
 
           return (
@@ -188,28 +232,45 @@ export default function Sidebar() {
                 marginBottom: "4px",
                 width: "100%",
                 border: "none",
+
                 backgroundColor: isActive
                   ? "#E8763A"
                   : isHovered
                   ? "#FEF0E8"
                   : "transparent",
+
                 borderLeft: isActive
                   ? "3px solid #C95E24"
                   : "3px solid transparent",
+
                 transition: "all 0.15s ease",
+
                 cursor: "pointer",
+
                 textAlign: "left",
               }}
             >
               <Icon
                 size={20}
-                color={isActive ? "#fff" : isHovered ? "#E8763A" : "#6B7280"}
+                color={
+                  isActive
+                    ? "#fff"
+                    : isHovered
+                    ? "#E8763A"
+                    : "#6B7280"
+                }
               />
+
               <span
                 style={{
                   fontSize: "14px",
                   fontWeight: isActive ? 700 : 500,
-                  color: isActive ? "#fff" : isHovered ? "#E8763A" : "#374151",
+
+                  color: isActive
+                    ? "#fff"
+                    : isHovered
+                    ? "#E8763A"
+                    : "#374151",
                 }}
               >
                 {label}
@@ -219,7 +280,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Logout */}
+      {/* LOGOUT */}
       <div style={{ padding: "0 16px 24px" }}>
         <div
           style={{
@@ -228,18 +289,28 @@ export default function Sidebar() {
             marginBottom: "12px",
           }}
         />
+
         <button
           style={{
             display: "flex",
             alignItems: "center",
             gap: "12px",
+
             padding: "11px 14px",
+
             borderRadius: "10px",
+
             width: "100%",
+
             border: "none",
+
             backgroundColor:
-              hovered === "logout" ? "#FEF0E8" : "transparent",
+              hovered === "logout"
+                ? "#FEF0E8"
+                : "transparent",
+
             cursor: "pointer",
+
             transition: "background-color 0.15s",
           }}
           onMouseEnter={() => setHovered("logout")}
@@ -248,13 +319,22 @@ export default function Sidebar() {
         >
           <LogOut
             size={20}
-            color={hovered === "logout" ? "#E8763A" : "#6B7280"}
+            color={
+              hovered === "logout"
+                ? "#E8763A"
+                : "#6B7280"
+            }
           />
+
           <span
             style={{
               fontSize: "14px",
               fontWeight: 500,
-              color: hovered === "logout" ? "#E8763A" : "#6B7280",
+
+              color:
+                hovered === "logout"
+                  ? "#E8763A"
+                  : "#6B7280",
             }}
           >
             Keluar
