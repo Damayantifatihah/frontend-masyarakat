@@ -191,24 +191,6 @@ export default function RegisterPage() {
                 <label className="text-white font-semibold text-[13px]">
                   Konfirmasi Kata Sandi
                 </label>
-
-                <div className="relative">
-                  <input
-                    type={showConfirm ? "text" : "password"}
-                    placeholder="Ulangi password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full h-[50px] rounded-xl bg-white px-4 pr-11 text-[14px] text-gray-900 outline-none"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                  >
-                    👁
-                  </button>
-                </div>
               </div>
 
               {/* Button */}
@@ -222,7 +204,7 @@ export default function RegisterPage() {
                 </button>
 
                   <Link
-                href="/landingpage"
+                href="/"
                 className="w-full h-[52px] rounded-xl bg-white/20 hover:bg-white/30 border border-white/40 transition-all duration-300 text-white font-semibold text-[14px] flex items-center justify-center tracking-wide"
               >
                 Kembali ke Halaman Depan

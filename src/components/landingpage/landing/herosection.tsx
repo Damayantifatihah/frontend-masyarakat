@@ -19,7 +19,7 @@ export default function HeroSection() {
       >
         <h1
           className="text-[44px] sm:text-[58px] lg:text-[64px] font-extrabold leading-tight mb-5"
-          style={{ color: "#E8734A" }}
+          style={{ color: "#FE7951" }}
         >
           Layanan Pengaduan
           <br />
@@ -31,7 +31,7 @@ export default function HeroSection() {
         </p>
      <Link
         href="/auth/login"
-        className="group inline-flex items-center gap-3 bg-[#E8734A] hover:bg-[#d4603a] text-white font-bold text-[16px] px-9 py-4 rounded-full shadow-lg transition-all duration-300 hover:scale-[1.03]"
+        className="group inline-flex items-center gap-3 bg-[#CC664F] hover:bg-[#d4603a] text-white font-bold text-[16px] px-9 py-4 rounded-full shadow-lg transition-all duration-300 hover:scale-[1.03]"
         >
         Laporkan Sekarang
 

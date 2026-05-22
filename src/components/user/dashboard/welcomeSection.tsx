@@ -13,7 +13,7 @@ interface WelcomeSectionProps {
 
 export default function WelcomeSection({
   totalLaporan = 12,
-  diproses = 4,
+  diproses = 2,
   selesai = 7,
   ditolak = 1,
 }: WelcomeSectionProps) {
@@ -21,7 +21,6 @@ export default function WelcomeSection({
 
   useEffect(() => {
     const user = getUser();
-
     if (user) {
       setUserName(user.name);
     }
@@ -38,30 +37,53 @@ export default function WelcomeSection({
     {
       label: "Total Laporan",
       value: totalLaporan,
-      color: "#E8763A",
-      bg: "#FEF0E8",
-      icon: "📋",
+      iconBg: "#EFF6FF",
+      iconColor: "#3B82F6",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="1"/>
+          <line x1="9" y1="12" x2="15" y2="12"/>
+          <line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>
+      ),
     },
     {
-      label: "Diproses",
-      value: diproses,
-      color: "#D97706",
-      bg: "#FEF3C7",
-      icon: "⏳",
-    },
-    {
-      label: "Selesai",
+      label: "Laporan Selesai",
       value: selesai,
-      color: "#16A34A",
-      bg: "#DCFCE7",
-      icon: "✅",
+      iconBg: "#F0FDF4",
+      iconColor: "#22C55E",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Sedang Diproses",
+      value: diproses,
+      iconBg: "#FFFBEB",
+      iconColor: "#F59E0B",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
     },
     {
       label: "Ditolak",
       value: ditolak,
-      color: "#DC2626",
-      bg: "#FEE2E2",
-      icon: "✗",
+      iconBg: "#FEF2F2",
+      iconColor: "#EF4444",
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      ),
     },
   ];
 
@@ -80,23 +102,24 @@ export default function WelcomeSection({
         style={{
           position: "relative",
           width: "100%",
-          minHeight: "210px",
-          borderRadius: "24px",
+          minHeight: "200px",
+          borderRadius: "20px",
           overflow: "hidden",
           display: "flex",
           alignItems: "center",
           padding: "36px",
           boxSizing: "border-box",
-          boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+          background: "linear-gradient(135deg, #FFF0E8 0%, #FDDCC8 50%, #FDC9AA 100%)",
         }}
       >
-        {/* BACKGROUND IMAGE */}
+        {/* BACKGROUND IMAGE (opsional, fallback ke gradient di atas) */}
         <Image
           src="/images/welcome.png"
           alt="Background"
           fill
-          style={{
-            objectFit: "cover",
+          style={{ objectFit: "cover" }}
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = "none";
           }}
         />
 
@@ -106,26 +129,21 @@ export default function WelcomeSection({
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(90deg, rgba(255,244,238,0.95) 0%, rgba(255,244,238,0.75) 45%, rgba(255,244,238,0.2) 100%)",
+              "linear-gradient(90deg, rgba(255,244,238,0.97) 0%, rgba(255,244,238,0.80) 45%, rgba(255,244,238,0.15) 100%)",
             zIndex: 1,
           }}
         />
 
         {/* CONTENT */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-          }}
-        >
+        <div style={{ position: "relative", zIndex: 2 }}>
           <p
             style={{
-              fontSize: "12px",
+              fontSize: "11px",
               fontWeight: 700,
-              letterSpacing: "0.08em",
+              letterSpacing: "0.1em",
               textTransform: "uppercase",
-              color: "#C95E24",
-              marginBottom: "8px",
+              color: "#8B3A2A",
+              marginBottom: "10px",
             }}
           >
             {today}
@@ -133,8 +151,8 @@ export default function WelcomeSection({
 
           <p
             style={{
-              fontSize: "18px",
-              color: "#7C4A1E",
+              fontSize: "15px",
+              color: "#8B5E3C",
               marginBottom: "4px",
             }}
           >
@@ -143,9 +161,9 @@ export default function WelcomeSection({
 
           <h1
             style={{
-              fontSize: "42px",
+              fontSize: "38px",
               fontWeight: 800,
-              color: "#C95E24",
+              color: "#8B3A2A",
               lineHeight: 1.1,
               marginBottom: "12px",
             }}
@@ -155,9 +173,9 @@ export default function WelcomeSection({
 
           <p
             style={{
-              fontSize: "15px",
-              color: "#8B5E3C",
-              maxWidth: "480px",
+              fontSize: "14px",
+              color: "#A06040",
+              maxWidth: "420px",
               lineHeight: 1.7,
             }}
           >
@@ -166,96 +184,21 @@ export default function WelcomeSection({
         </div>
       </div>
 
-      {/* STATS */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "14px",
-        }}
-      >
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            style={{
-              backgroundColor: "#fff",
-              border: "1px solid #F1F1F1",
-              borderRadius: "18px",
-              padding: "18px",
-              display: "flex",
-              alignItems: "center",
-              gap: "14px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "14px",
-                backgroundColor: s.bg,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "20px",
-                flexShrink: 0,
-              }}
-            >
-              {s.icon}
-            </div>
-
-            <div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: "24px",
-                  fontWeight: 800,
-                  color: s.color,
-                }}
-              >
-                {s.value}
-              </p>
-
-              <p
-                style={{
-                  margin: "4px 0 0",
-                  fontSize: "13px",
-                  color: "#9CA3AF",
-                }}
-              >
-                {s.label}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* TIPS */}
-      <div
-        style={{
-          borderRadius: "16px",
-          padding: "14px 18px",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          backgroundColor: "#FEF0E8",
-          border: "1px solid #FDDCCA",
-        }}
-      >
-        <span style={{ fontSize: "18px" }}>💡</span>
-
+     
+        <span style={{ fontSize: "18px", marginTop: "1px", flexShrink: 0 }}>
+          💡
+        </span>
         <p
           style={{
             margin: 0,
-            fontSize: "14px",
+            fontSize: "13px",
             color: "#92400E",
             lineHeight: 1.7,
           }}
         >
-          <strong>Tips:</strong> Sertakan foto dan titik lokasi yang jelas
-          agar laporan kamu diproses lebih cepat oleh petugas.
+          <strong>Tips:</strong> Sertakan foto dan titik lokasi yang jelas agar
+          laporan kamu diproses lebih cepat oleh petugas.
         </p>
       </div>
-    </div>
   );
 }

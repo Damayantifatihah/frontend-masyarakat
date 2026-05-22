@@ -126,7 +126,8 @@ export default function LoginPage() {
       // =========================
       // SIMPAN COOKIE
       // =========================
-      document.cookie = `token=${token}; path=/`;
+     document.cookie = `token=${token}; path=/`;
+    document.cookie = `role=${user.role}; path=/`;
 
       // =========================
       // REDIRECT ROLE
@@ -135,7 +136,7 @@ export default function LoginPage() {
         user.role === "admin"
       ) {
         router.replace(
-          "/admin/dashboard"
+          "/admin"
         );
 
         return;
@@ -315,23 +316,9 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 my-6">
-              <div className="flex-1 h-px bg-white/30" />
+            
 
-              <span className="text-white/60 text-[12px] whitespace-nowrap">
-                atau lanjutkan dengan
-              </span>
-
-              <div className="flex-1 h-px bg-white/30" />
-            </div>
-
-            {/* GOOGLE */}
-            <button className="w-full h-[52px] bg-white rounded-xl flex items-center justify-center gap-3 shadow-md hover:scale-[1.02] transition-all duration-300">
-              <span className="text-[14px] font-semibold text-gray-700">
-                Masuk dengan Google
-              </span>
-            </button>
+           
 
             {/* REGISTER */}
             <p className="text-center text-[13px] text-white/70 mt-7">

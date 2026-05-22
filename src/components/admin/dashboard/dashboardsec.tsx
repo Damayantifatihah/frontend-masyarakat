@@ -412,7 +412,7 @@ export default function AdminDashboard() {
           <KategoriBar data={kategoriData} />
         </div>
 
-        <div className="bg-gradient-to-br from-[#E8763A] to-[#C95E24] rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+        <div className="bg-gradient-to-br bg-[#FE7951] rounded-2xl p-5 shadow-sm flex flex-col justify-between">
           <div>
             <p className="text-white/70 text-xs font-semibold uppercase tracking-wide">
               Butuh Perhatian

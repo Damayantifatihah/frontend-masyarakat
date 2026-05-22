@@ -3,39 +3,41 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+
 import {
   LayoutDashboard,
-  FileText,
-  FolderKanban,
+  Users,
+  UserCog,
   LogOut,
 } from "lucide-react";
 
-import { logout } from "@/lib/auth";;
+import { logout } from "@/lib/auth";
 
 const menus = [
   {
     label: "Dashboard",
-    href: "/admin",
+    href: "/superadmin/dashboard",
     icon: LayoutDashboard,
   },
   {
-    label: "Kelola Laporan",
-    href: "/admin/kelola-laporan",
-    icon: FileText,
+    label: "Manajemen Admin",
+    href: "/superadmin/manajemen-admin",
+    icon: UserCog,
   },
   {
-    label: "Kelola Kategori",
-    href: "/admin/kelola-kategori",
-    icon: FolderKanban,
+    label: "Manajemen User",
+    href: "/superadmin/manajemen-user",
+    icon: Users,
   },
 ];
 
-export default function Sidebar() {
+export default function SuperAdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[270px] bg-white border-r border-gray-100 flex flex-col">
-      {/* Logo */}
+    <aside className="w-[270px] bg-white border-r border-gray-100 flex flex-col min-h-screen">
+      
+      {/* LOGO */}
       <div className="h-[80px] border-b border-gray-100 flex items-center px-6">
         <Image
           src="/images/logo.png"
@@ -46,10 +48,11 @@ export default function Sidebar() {
         />
       </div>
 
-      {/* Menu */}
+      {/* MENU */}
       <div className="flex-1 px-4 py-6 flex flex-col gap-2">
         {menus.map((item) => {
-          const active = pathname === item.href;
+          const active =
+            pathname === item.href;
 
           return (
             <Link
@@ -58,7 +61,7 @@ export default function Sidebar() {
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all
               ${
                 active
-                  ? "bg-[#B45743] text-white"
+                  ? "bg-[#B45743] text-white shadow-sm"
                   : "text-gray-600 hover:bg-[#FEF0E8] hover:text-[#E8763A]"
               }`}
             >
@@ -72,7 +75,27 @@ export default function Sidebar() {
         })}
       </div>
 
-     {/* Logout */}
+      {/* PROFILE SUPER ADMIN */}
+      <div className="px-4 pb-4">
+        <div className="bg-[#FEF0E8] rounded-2xl p-4 flex items-center gap-3">
+          
+          <div className="w-12 h-12 rounded-full bg-[#B45743] flex items-center justify-center text-white font-bold text-lg">
+            S
+          </div>
+
+          <div>
+            <h3 className="font-semibold text-gray-800">
+              Super Admin
+            </h3>
+
+            <p className="text-sm text-gray-500">
+              Full Access Control
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* LOGOUT */}
       <div className="p-4 border-t border-gray-100">
         <button
           onClick={logout}

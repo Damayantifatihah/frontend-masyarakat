@@ -67,7 +67,7 @@ export default function CaraKerjaSection() {
           <h2 className="text-[26px] sm:text-[32px] font-bold text-gray-900 mb-3">
             Cara Kerja LaporinAja
           </h2>
-          <p className="text-[#E8734A] text-[14px] sm:text-[15px] font-medium leading-relaxed">
+          <p className="text-[#CC664F] text-[14px] sm:text-[15px] font-medium leading-relaxed">
             Lima langkah sederhana dari laporan hingga masalah<br className="hidden sm:block" /> selesai ditangani
           </p>
         </div>
@@ -76,14 +76,14 @@ export default function CaraKerjaSection() {
           {/* Dashed connector line (desktop only) */}
           <div className="hidden lg:block absolute top-[36px] left-[10%] right-[10%] h-[2px] z-0">
             <svg width="100%" height="2">
-              <line x1="0" y1="1" x2="100%" y2="1" stroke="#E8734A" strokeWidth="2" strokeDasharray="8 6" opacity="0.4" />
+              <line x1="0" y1="1" x2="100%" y2="1" stroke="#CC664F" strokeWidth="2" strokeDasharray="8 6" opacity="0.4" />
             </svg>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-8 relative z-10">
             {steps.map(({ number, title, desc, icon }) => (
               <div key={number} className="flex flex-col items-center text-center">
-                <div className="w-[72px] h-[72px] rounded-full bg-[#E8734A] flex items-center justify-center mb-4 shadow-md">
+                <div className="w-[72px] h-[72px] rounded-full bg-[#CC664F] flex items-center justify-center mb-4 shadow-md">
                   {icon}
                 </div>
                 <span className="text-[13px] text-gray-400 font-semibold mb-1">{number}</span>

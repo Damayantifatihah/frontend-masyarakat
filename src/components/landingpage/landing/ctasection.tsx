@@ -35,11 +35,11 @@ export default function CtaSection() {
             <div className="flex flex-col gap-4">
              <Link
               href="/auth/login"
-              className="bg-[#F57B52] hover:bg-[#e56f47] text-white font-bold text-[15px] px-8 py-4 rounded-xl shadow-md transition-all duration-300 text-center"
+              className="bg-[#FE7951] hover:bg-[#e56f47] text-white font-bold text-[15px] px-8 py-4 rounded-xl shadow-md transition-all duration-300 text-center"
             >
               Buat Laporan Anda Sekarang
             </Link>
-              <button className="bg-[#F57B52] hover:bg-[#e56f47] text-white font-bold text-[15px] px-8 py-4 rounded-xl shadow-md transition-all duration-300">
+              <button className="bg-[#FE7951] hover:bg-[#e56f47] text-white font-bold text-[15px] px-8 py-4 rounded-xl shadow-md transition-all duration-300">
                 Pelajari Selengkapnya
               </button>
             </div>

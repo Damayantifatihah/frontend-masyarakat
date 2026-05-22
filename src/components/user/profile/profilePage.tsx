@@ -27,31 +27,29 @@ export default function ProfilePage() {
     const currentUser = getUser();
 
     if (currentUser) {
-      // ambil bio yg pernah diedit
-      const savedProfile = localStorage.getItem("userProfile");
-
-      let savedBio =
+      const savedBio =
         currentUser.bio ||
         "Aktif melaporkan permasalahan lingkungan dan fasilitas umum.";
 
-      if (savedProfile) {
-        const parsed = JSON.parse(savedProfile);
-
-        savedBio = parsed.bio || savedBio;
-      }
-
-      // set user
       setUser({
         ...currentUser,
         bio: savedBio,
       });
 
-      // set form
       setForm({
         email: currentUser.email || "",
         password: "",
         bio: savedBio,
       });
+
+      // LOAD FOTO BERDASARKAN EMAIL
+      const savedPhoto = localStorage.getItem(
+        `profilePhoto_${currentUser.email}`
+      );
+
+      if (savedPhoto) {
+        setPhoto(savedPhoto);
+      }
     }
   }, []);
 
@@ -102,6 +100,7 @@ export default function ProfilePage() {
   // ==============================
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
+
     setCameraOpen(false);
   };
 
@@ -127,21 +126,22 @@ export default function ProfilePage() {
 
     setPhoto(imageData);
 
-    localStorage.setItem("profilePhoto", imageData);
+    const currentUser = getUser();
+
+    if (currentUser?.email) {
+      localStorage.setItem(
+        `profilePhoto_${currentUser.email}`,
+        imageData
+      );
+    }
+
+    // UPDATE REALTIME SIDEBAR
+    window.dispatchEvent(
+      new Event("profileUpdated")
+    );
 
     stopCamera();
   };
-
-  // ==============================
-  // LOAD PHOTO
-  // ==============================
-  useEffect(() => {
-    const savedPhoto = localStorage.getItem("profilePhoto");
-
-    if (savedPhoto) {
-      setPhoto(savedPhoto);
-    }
-  }, []);
 
   // ==============================
   // CLEANUP CAMERA
@@ -169,26 +169,83 @@ export default function ProfilePage() {
   const handleSave = () => {
     const currentUser = getUser();
 
-    const updatedUser = {
-      ...currentUser,
-      bio: form.bio,
-    };
+    if (!currentUser) return;
 
-    // update user
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-
-    // simpan bio profile
-    localStorage.setItem(
-      "userProfile",
-      JSON.stringify({
-        bio: form.bio,
-      })
+    // AMBIL SEMUA USER
+    const users = JSON.parse(
+      localStorage.getItem("users") || "[]"
     );
 
-    // realtime update
-    window.dispatchEvent(new Event("storage"));
+    // UPDATE USER
+    const updatedUser = {
+      ...currentUser,
+      email: form.email,
+      bio: form.bio,
 
+      password:
+        form.password.trim() !== ""
+          ? form.password
+          : currentUser.password,
+    };
+
+    // UPDATE USERS ARRAY
+    const updatedUsers = users.map((u: any) => {
+      if (u.email === currentUser.email) {
+        return {
+          ...u,
+          email: updatedUser.email,
+          bio: updatedUser.bio,
+          password: updatedUser.password,
+        };
+      }
+
+      return u;
+    });
+
+    // SIMPAN USERS
+    localStorage.setItem(
+      "users",
+      JSON.stringify(updatedUsers)
+    );
+
+    // SIMPAN USER LOGIN
+    localStorage.setItem(
+      "user",
+      JSON.stringify(updatedUser)
+    );
+
+    // HANDLE FOTO JIKA EMAIL BERUBAH
+    if (
+      currentUser.email !== updatedUser.email &&
+      photo
+    ) {
+      localStorage.setItem(
+        `profilePhoto_${updatedUser.email}`,
+        photo
+      );
+
+      localStorage.removeItem(
+        `profilePhoto_${currentUser.email}`
+      );
+    }
+
+    // UPDATE STATE
     setUser(updatedUser);
+
+    setForm({
+      email: updatedUser.email,
+      password: "",
+      bio: updatedUser.bio || "",
+    });
+
+    // REALTIME UPDATE
+    window.dispatchEvent(
+      new Event("profileUpdated")
+    );
+
+    window.dispatchEvent(
+      new Event("storage")
+    );
 
     setIsEditing(false);
 
@@ -211,11 +268,9 @@ export default function ProfilePage() {
       {/* CARD */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-6 pb-6">
-
           {/* TOP */}
           <div className="flex items-start justify-between mt-10 mb-6">
             <div className="flex items-center gap-4">
-
               {/* AVATAR */}
               <div className="relative">
                 {photo ? (
@@ -252,7 +307,8 @@ export default function ProfilePage() {
                 </p>
 
                 <p className="text-xs text-gray-400 mt-2 max-w-sm">
-                  Nama pengguna mengikuti data NIK dan tidak dapat diubah.
+                  Nama pengguna mengikuti data NIK dan tidak dapat
+                  diubah.
                 </p>
               </div>
             </div>
@@ -275,7 +331,6 @@ export default function ProfilePage() {
 
           {/* FORM */}
           <div className="flex flex-col gap-5">
-
             {/* EMAIL */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -360,26 +415,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* DANGER ZONE */}
-      <div className="mt-5 bg-white rounded-3xl border border-red-100 shadow-sm px-6 py-5">
-        <p className="text-sm font-semibold text-gray-800 mb-1">
-          Hapus Akun
-        </p>
-
-        <p className="text-xs text-gray-400 mb-4">
-          Akun yang dihapus tidak dapat dipulihkan kembali.
-        </p>
-
-        <button className="h-10 px-4 rounded-xl border border-red-200 bg-red-50 text-red-500 text-sm font-semibold hover:bg-red-100 transition">
-          Hapus Akun Saya
-        </button>
-      </div>
-
       {/* CAMERA MODAL */}
       {cameraOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-4 w-full max-w-md">
-
             <h2 className="text-lg font-bold text-gray-800 mb-4">
               Ambil Foto Profil
             </h2>
