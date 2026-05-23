@@ -23,7 +23,11 @@ const BRAND_DARK = "#8B3A2A";
 const BRAND_LIGHT = "#F9EAE7";
 
 const navItems = [
-  { label: "Beranda", href: "/user", icon: Home },
+  {
+    label: "Beranda",
+    href: "/user",
+    icon: Home,
+  },
   {
     label: "Buat Laporan",
     href: "/user/buatlaporan",
@@ -69,7 +73,8 @@ function buildUserState(base: {
 export default function Sidebar() {
   const pathname = usePathname();
 
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [hovered, setHovered] =
+    useState<string | null>(null);
 
   const [scrolled, setScrolled] =
     useState(false);
@@ -90,28 +95,16 @@ export default function Sidebar() {
 
     if (!currentUser) return;
 
-    // AMBIL SEMUA USERS
-    const users = JSON.parse(
-      localStorage.getItem("users") || "[]"
-    );
-
-    // CARI USER TERBARU
-    const latestUser =
-      users.find(
-        (u: any) =>
-          u.email === currentUser.email
-      ) || currentUser;
-
-    // AMBIL FOTO
+    // FOTO TERBARU
     const savedPhoto = localStorage.getItem(
-      `profilePhoto_${latestUser.email}`
+      `profilePhoto_${currentUser.email}`
     );
 
     // UPDATE STATE
     setUser(
       buildUserState({
-        name: latestUser.name,
-        bio: latestUser.bio,
+        name: currentUser.name,
+        bio: currentUser.bio,
         photo: savedPhoto,
       })
     );
@@ -128,6 +121,7 @@ export default function Sidebar() {
       loadUser();
     };
 
+    // REALTIME UPDATE
     window.addEventListener(
       "storage",
       handler

@@ -1,11 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import { getUser } from "@/lib/auth";
+import api from "@/lib/axios";
 
 export default function ProfilePage() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [isEditing, setIsEditing] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [user, setUser] =
+    useState<any>(null);
 
   const [form, setForm] = useState({
     email: "",
@@ -13,12 +21,25 @@ export default function ProfilePage() {
     bio: "",
   });
 
-  const [photo, setPhoto] = useState<string | null>(null);
-  const [cameraOpen, setCameraOpen] = useState(false);
+  const [photo, setPhoto] = useState<
+    string | null
+  >(null);
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraOpen, setCameraOpen] =
+    useState(false);
+
+  const videoRef =
+    useRef<HTMLVideoElement | null>(
+      null
+    );
+
+  const canvasRef =
+    useRef<HTMLCanvasElement | null>(
+      null
+    );
+
+  const streamRef =
+    useRef<MediaStream | null>(null);
 
   // ==============================
   // LOAD USER
@@ -31,21 +52,25 @@ export default function ProfilePage() {
         currentUser.bio ||
         "Aktif melaporkan permasalahan lingkungan dan fasilitas umum.";
 
-      setUser({
+      const userData = {
         ...currentUser,
         bio: savedBio,
-      });
+      };
+
+      setUser(userData);
 
       setForm({
-        email: currentUser.email || "",
+        email:
+          currentUser.email || "",
         password: "",
         bio: savedBio,
       });
 
-      // LOAD FOTO BERDASARKAN EMAIL
-      const savedPhoto = localStorage.getItem(
-        `profilePhoto_${currentUser.email}`
-      );
+      // LOAD FOTO
+      const savedPhoto =
+        localStorage.getItem(
+          `profilePhoto_${currentUser.email}`
+        );
 
       if (savedPhoto) {
         setPhoto(savedPhoto);
@@ -57,11 +82,14 @@ export default function ProfilePage() {
   // HANDLE INPUT
   // ==============================
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement
+    >
   ) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
     });
   };
 
@@ -73,25 +101,37 @@ export default function ProfilePage() {
       setCameraOpen(true);
 
       setTimeout(async () => {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "user",
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-          audio: false,
-        });
+        const stream =
+          await navigator.mediaDevices.getUserMedia(
+            {
+              video: {
+                facingMode: "user",
+                width: {
+                  ideal: 1280,
+                },
+                height: {
+                  ideal: 720,
+                },
+              },
+              audio: false,
+            }
+          );
 
         streamRef.current = stream;
 
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+          videoRef.current.srcObject =
+            stream;
+
           await videoRef.current.play();
         }
       }, 300);
     } catch (error) {
-      console.error(error);
-      alert("Tidak dapat mengakses kamera");
+      console.log(error);
+
+      alert(
+        "Tidak dapat mengakses kamera"
+      );
     }
   };
 
@@ -99,7 +139,11 @@ export default function ProfilePage() {
   // STOP CAMERA
   // ==============================
   const stopCamera = () => {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current
+      ?.getTracks()
+      .forEach((track) =>
+        track.stop()
+      );
 
     setCameraOpen(false);
   };
@@ -108,21 +152,29 @@ export default function ProfilePage() {
   // CAPTURE PHOTO
   // ==============================
   const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (
+      !videoRef.current ||
+      !canvasRef.current
+    )
+      return;
 
     const video = videoRef.current;
+
     const canvas = canvasRef.current;
 
     canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.height =
+      video.videoHeight;
 
-    const ctx = canvas.getContext("2d");
+    const ctx =
+      canvas.getContext("2d");
 
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0);
 
-    const imageData = canvas.toDataURL("image/png");
+    const imageData =
+      canvas.toDataURL("image/png");
 
     setPhoto(imageData);
 
@@ -135,7 +187,7 @@ export default function ProfilePage() {
       );
     }
 
-    // UPDATE REALTIME SIDEBAR
+    // UPDATE SIDEBAR
     window.dispatchEvent(
       new Event("profileUpdated")
     );
@@ -149,17 +201,15 @@ export default function ProfilePage() {
   const removePhoto = () => {
     const currentUser = getUser();
 
-    if (!currentUser?.email) return;
+    if (!currentUser?.email)
+      return;
 
-    // HAPUS FOTO DARI STORAGE
     localStorage.removeItem(
       `profilePhoto_${currentUser.email}`
     );
 
-    // RESET STATE
     setPhoto(null);
 
-    // UPDATE REALTIME
     window.dispatchEvent(
       new Event("profileUpdated")
     );
@@ -170,7 +220,11 @@ export default function ProfilePage() {
   // ==============================
   useEffect(() => {
     return () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current
+        ?.getTracks()
+        .forEach((track) =>
+          track.stop()
+        );
     };
   }, []);
 
@@ -180,7 +234,9 @@ export default function ProfilePage() {
   const initials =
     user?.name
       ?.split(" ")
-      .map((word: string) => word[0])
+      .map(
+        (word: string) => word[0]
+      )
       .slice(0, 2)
       .join("")
       .toUpperCase() || "U";
@@ -188,110 +244,121 @@ export default function ProfilePage() {
   // ==============================
   // SAVE PROFILE
   // ==============================
-  const handleSave = () => {
-    const currentUser = getUser();
+  const handleSave = async () => {
+    try {
+      setLoading(true);
 
-    if (!currentUser) return;
+      const res = await api.put(
+        "/auth/profile",
+        {
+          email: form.email,
+          password: form.password,
+          bio: form.bio,
+        }
+      );
 
-    // AMBIL SEMUA USER
-    const users = JSON.parse(
-      localStorage.getItem("users") || "[]"
-    );
+      // USER BARU
+      const updatedUser = {
+        ...user,
+        ...res.data.user,
+        bio: form.bio,
+      };
 
-    // UPDATE USER
-    const updatedUser = {
-      ...currentUser,
-      email: form.email,
-      bio: form.bio,
+      // UPDATE LOCAL STORAGE
+      localStorage.setItem(
+        "user",
+        JSON.stringify(
+          updatedUser
+        )
+      );
 
-      password:
-        form.password.trim() !== ""
-          ? form.password
-          : currentUser.password,
-    };
+      // HANDLE FOTO
+      if (
+        user.email !==
+          updatedUser.email &&
+        photo
+      ) {
+        localStorage.setItem(
+          `profilePhoto_${updatedUser.email}`,
+          photo
+        );
 
-    // UPDATE USERS ARRAY
-    const updatedUsers = users.map((u: any) => {
-      if (u.email === currentUser.email) {
-        return {
-          ...u,
-          email: updatedUser.email,
-          bio: updatedUser.bio,
-          password: updatedUser.password,
-        };
+        localStorage.removeItem(
+          `profilePhoto_${user.email}`
+        );
       }
 
-      return u;
-    });
+      // UPDATE STATE
+      setUser(updatedUser);
 
-    // SIMPAN USERS
-    localStorage.setItem(
-      "users",
-      JSON.stringify(updatedUsers)
-    );
+      setForm({
+        email:
+          updatedUser.email,
+        password: "",
+        bio:
+          updatedUser.bio ||
+          "",
+      });
 
-    // SIMPAN USER LOGIN
-    localStorage.setItem(
-      "user",
-      JSON.stringify(updatedUser)
-    );
-
-    // HANDLE FOTO JIKA EMAIL BERUBAH
-    if (
-      currentUser.email !== updatedUser.email &&
-      photo
-    ) {
-      localStorage.setItem(
-        `profilePhoto_${updatedUser.email}`,
-        photo
+      // REALTIME UPDATE
+      window.dispatchEvent(
+        new Event(
+          "profileUpdated"
+        )
       );
 
-      localStorage.removeItem(
-        `profilePhoto_${currentUser.email}`
+      window.dispatchEvent(
+        new Event("storage")
       );
+
+      setIsEditing(false);
+
+      alert(
+        "Profil berhasil diperbarui"
+      );
+    } catch (error: any) {
+      console.log(error);
+
+      alert(
+        error?.response?.data
+          ?.message ||
+          "Gagal update profile"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    // UPDATE STATE
-    setUser(updatedUser);
-
-    setForm({
-      email: updatedUser.email,
-      password: "",
-      bio: updatedUser.bio || "",
-    });
-
-    // REALTIME UPDATE
-    window.dispatchEvent(
-      new Event("profileUpdated")
-    );
-
-    window.dispatchEvent(
-      new Event("storage")
-    );
-
-    setIsEditing(false);
-
-    alert("Profil berhasil diperbarui");
   };
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="max-w-3xl p-6">
       {/* HEADER */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
           Profil Saya
         </h1>
 
-        <p className="text-sm text-gray-400 mt-1">
-          Kelola informasi akun kamu
+        <p className="mt-1 text-sm text-gray-400">
+          Kelola informasi akun
+          kamu
         </p>
       </div>
 
       {/* CARD */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div
+        className="
+        overflow-hidden rounded-3xl
+        border border-gray-100
+        bg-white shadow-sm
+      "
+      >
         <div className="px-6 pb-6">
           {/* TOP */}
-          <div className="flex items-start justify-between mt-10 mb-6">
+          <div
+            className="
+            mt-10 mb-6
+            flex items-start justify-between
+          "
+          >
             <div className="flex items-center gap-4">
               {/* AVATAR */}
               <div className="relative">
@@ -299,30 +366,63 @@ export default function ProfilePage() {
                   <img
                     src={photo}
                     alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
+                    className="
+                      h-24 w-24 rounded-full
+                      border-4 border-white
+                      object-cover shadow-md
+                    "
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-[#C95E24] border-4 border-white flex items-center justify-center text-white text-3xl font-bold shadow-md">
+                  <div
+                    className="
+                    flex h-24 w-24
+                    items-center justify-center
+                    rounded-full border-4 border-white
+                    bg-[#C95E24]
+                    text-3xl font-bold text-white
+                    shadow-md
+                  "
+                  >
                     {initials}
                   </div>
                 )}
 
-                {/* ACTION BUTTONS */}
+                {/* ACTION */}
                 {isEditing && (
                   <>
                     {/* CAMERA */}
                     <button
-                      onClick={openCamera}
-                      className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-[#E8763A] hover:bg-[#C95E24] flex items-center justify-center shadow-md transition"
+                      onClick={
+                        openCamera
+                      }
+                      className="
+                        absolute -right-1 -bottom-1
+                        flex h-9 w-9
+                        items-center justify-center
+                        rounded-full
+                        bg-[#E8763A]
+                        shadow-md transition
+                        hover:bg-[#C95E24]
+                      "
                     >
                       📷
                     </button>
 
-                    {/* DELETE PHOTO */}
+                    {/* DELETE */}
                     {photo && (
                       <button
-                        onClick={removePhoto}
-                        className="absolute -bottom-1 -left-1 w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-md transition text-white"
+                        onClick={
+                          removePhoto
+                        }
+                        className="
+                          absolute -bottom-1 -left-1
+                          flex h-9 w-9
+                          items-center justify-center
+                          rounded-full
+                          bg-red-500
+                          text-white shadow-md
+                          transition hover:bg-red-600
+                        "
                       >
                         🗑️
                       </button>
@@ -331,44 +431,73 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              {/* USER INFO */}
+              {/* USER */}
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {user?.name || "Loading..."}
+                <h2
+                  className="
+                  text-2xl font-bold
+                  text-gray-800
+                "
+                >
+                  {user?.name ||
+                    "Loading..."}
                 </h2>
 
-                <p className="text-sm text-gray-400 mt-1">
-                  Bergabung sejak Januari 2024
+                <p
+                  className="
+                  mt-1 text-sm text-gray-400
+                "
+                >
+                  Bergabung sejak
+                  Januari 2024
                 </p>
 
-                <p className="text-xs text-gray-400 mt-2 max-w-sm">
-                  Nama pengguna mengikuti data NIK dan tidak dapat
+                <p
+                  className="
+                  mt-2 max-w-sm
+                  text-xs text-gray-400
+                "
+                >
+                  Nama pengguna
+                  mengikuti data NIK
+                  dan tidak dapat
                   diubah.
                 </p>
               </div>
             </div>
 
-            {/* EDIT BUTTON */}
+            {/* BUTTON EDIT */}
             <button
-              onClick={() => setIsEditing(!isEditing)}
-              className={`h-10 px-5 rounded-xl text-sm font-semibold border transition-all duration-200
+              onClick={() =>
+                setIsEditing(
+                  !isEditing
+                )
+              }
+              className={`h-10 rounded-xl border px-5 text-sm font-semibold transition-all duration-200
               ${
                 isEditing
-                  ? "bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200"
-                  : "bg-[#FEF0E8] border-[#E8763A] text-[#C95E24] hover:bg-[#FDDCCA]"
+                  ? "border-gray-200 bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  : "border-[#E8763A] bg-[#FEF0E8] text-[#C95E24] hover:bg-[#FDDCCA]"
               }`}
             >
-              {isEditing ? "Batal" : "Edit Profil"}
+              {isEditing
+                ? "Batal"
+                : "Edit Profil"}
             </button>
           </div>
 
-          <hr className="border-gray-100 mb-6" />
+          <hr className="mb-6 border-gray-100" />
 
           {/* FORM */}
           <div className="flex flex-col gap-5">
             {/* EMAIL */}
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <label
+                className="
+                text-xs font-semibold
+                tracking-wide text-gray-500 uppercase
+              "
+              >
                 Email
               </label>
 
@@ -376,12 +505,33 @@ export default function ProfilePage() {
                 <input
                   type="email"
                   name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  className="h-11 rounded-xl border border-gray-300 px-4 text-sm text-gray-700 outline-none focus:border-[#E8763A] focus:ring-4 focus:ring-[#E8763A]/10 transition"
+                  value={
+                    form.email
+                  }
+                  onChange={
+                    handleChange
+                  }
+                  className="
+                    h-11 rounded-xl
+                    border border-gray-300
+                    px-4 text-sm
+                    text-gray-700 outline-none
+                    transition
+                    focus:border-[#E8763A]
+                    focus:ring-4
+                    focus:ring-[#E8763A]/10
+                  "
                 />
               ) : (
-                <div className="h-11 rounded-xl bg-gray-50 border border-gray-100 px-4 flex items-center text-sm text-gray-800 font-medium">
+                <div
+                  className="
+                  flex h-11 items-center
+                  rounded-xl border
+                  border-gray-100 bg-gray-50
+                  px-4 text-sm
+                  font-medium text-gray-800
+                "
+                >
                   {form.email}
                 </div>
               )}
@@ -389,7 +539,12 @@ export default function ProfilePage() {
 
             {/* PASSWORD */}
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <label
+                className="
+                text-xs font-semibold
+                tracking-wide text-gray-500 uppercase
+              "
+              >
                 Password
               </label>
 
@@ -397,13 +552,35 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   name="password"
-                  value={form.password}
-                  onChange={handleChange}
+                  value={
+                    form.password
+                  }
+                  onChange={
+                    handleChange
+                  }
                   placeholder="Masukkan password baru"
-                  className="h-11 rounded-xl border border-gray-300 px-4 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:border-[#E8763A] focus:ring-4 focus:ring-[#E8763A]/10 transition"
+                  className="
+                    h-11 rounded-xl
+                    border border-gray-300
+                    px-4 text-sm
+                    text-gray-700 outline-none
+                    transition
+                    placeholder:text-gray-400
+                    focus:border-[#E8763A]
+                    focus:ring-4
+                    focus:ring-[#E8763A]/10
+                  "
                 />
               ) : (
-                <div className="h-11 rounded-xl bg-gray-50 border border-gray-100 px-4 flex items-center text-sm text-gray-400 font-medium">
+                <div
+                  className="
+                  flex h-11 items-center
+                  rounded-xl border
+                  border-gray-100 bg-gray-50
+                  px-4 text-sm
+                  font-medium text-gray-400
+                "
+                >
                   ••••••••••
                 </div>
               )}
@@ -411,7 +588,12 @@ export default function ProfilePage() {
 
             {/* BIO */}
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <label
+                className="
+                text-xs font-semibold
+                tracking-wide text-gray-500 uppercase
+              "
+              >
                 Bio Singkat
               </label>
 
@@ -419,30 +601,64 @@ export default function ProfilePage() {
                 <textarea
                   name="bio"
                   value={form.bio}
-                  onChange={handleChange}
+                  onChange={
+                    handleChange
+                  }
                   rows={4}
                   placeholder="Tulis deskripsi singkat..."
-                  className="rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-700 placeholder:text-gray-400 outline-none resize-none focus:border-[#E8763A] focus:ring-4 focus:ring-[#E8763A]/10 transition"
+                  className="
+                    resize-none rounded-xl
+                    border border-gray-300
+                    px-4 py-3 text-sm
+                    text-gray-700 outline-none
+                    transition
+                    placeholder:text-gray-400
+                    focus:border-[#E8763A]
+                    focus:ring-4
+                    focus:ring-[#E8763A]/10
+                  "
                 />
               ) : (
-                <div className="rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-sm text-gray-700 leading-relaxed">
+                <div
+                  className="
+                  rounded-xl border
+                  border-gray-100 bg-gray-50
+                  px-4 py-3 text-sm
+                  leading-relaxed text-gray-700
+                "
+                >
                   {form.bio}
                 </div>
               )}
             </div>
           </div>
 
-          {/* SAVE BUTTON */}
+          {/* SAVE */}
           {isEditing && (
             <>
-              <hr className="border-gray-100 mt-6 mb-5" />
+              <hr className="mt-6 mb-5 border-gray-100" />
 
               <div className="flex justify-end">
                 <button
-                  onClick={handleSave}
-                  className="h-11 px-6 rounded-xl bg-[#E8763A] hover:bg-[#C95E24] text-white text-sm font-bold shadow-sm transition-all duration-200"
+                  onClick={
+                    handleSave
+                  }
+                  disabled={loading}
+                  className="
+                    h-11 rounded-xl
+                    bg-[#E8763A]
+                    px-6 text-sm
+                    font-bold text-white
+                    shadow-sm transition-all
+                    duration-200
+                    hover:bg-[#C95E24]
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
+                  "
                 >
-                  Simpan Perubahan
+                  {loading
+                    ? "Menyimpan..."
+                    : "Simpan Perubahan"}
                 </button>
               </div>
             </>
@@ -452,33 +668,71 @@ export default function ProfilePage() {
 
       {/* CAMERA MODAL */}
       {cameraOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-4 w-full max-w-md">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">
+        <div
+          className="
+          fixed inset-0 z-50
+          flex items-center justify-center
+          bg-black/80 p-4
+        "
+        >
+          <div
+            className="
+            w-full max-w-md
+            rounded-3xl bg-white p-4
+          "
+          >
+            <h2
+              className="
+              mb-4 text-lg
+              font-bold text-gray-800
+            "
+            >
               Ambil Foto Profil
             </h2>
 
-            <div className="overflow-hidden rounded-2xl bg-black">
+            <div
+              className="
+              overflow-hidden rounded-2xl
+              bg-black
+            "
+            >
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-[400px] object-cover rounded-2xl"
+                className="
+                  h-[400px] w-full
+                  rounded-2xl object-cover
+                "
               />
             </div>
 
-            <div className="flex gap-3 mt-4">
+            <div className="mt-4 flex gap-3">
               <button
-                onClick={stopCamera}
-                className="flex-1 h-11 rounded-xl border border-gray-300 text-gray-600 font-semibold hover:bg-gray-100 transition"
+                onClick={
+                  stopCamera
+                }
+                className="
+                  h-11 flex-1 rounded-xl
+                  border border-gray-300
+                  font-semibold text-gray-600
+                  transition hover:bg-gray-100
+                "
               >
                 Batal
               </button>
 
               <button
-                onClick={capturePhoto}
-                className="flex-1 h-11 rounded-xl bg-[#E8763A] hover:bg-[#C95E24] text-white font-semibold transition"
+                onClick={
+                  capturePhoto
+                }
+                className="
+                  h-11 flex-1 rounded-xl
+                  bg-[#E8763A]
+                  font-semibold text-white
+                  transition hover:bg-[#C95E24]
+                "
               >
                 Ambil Foto
               </button>
@@ -488,7 +742,10 @@ export default function ProfilePage() {
       )}
 
       {/* HIDDEN CANVAS */}
-      <canvas ref={canvasRef} className="hidden" />
+      <canvas
+        ref={canvasRef}
+        className="hidden"
+      />
     </div>
   );
 }

@@ -6,10 +6,9 @@ export default function SuperAdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
       <SuperAdminSidebar />
-
-      <main className="flex-1 bg-gray-100 min-h-screen">
+      <main className="flex-1 min-w-0 overflow-y-auto bg-slate-50">
         {children}
       </main>
     </div>
