@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+
 import {
   Home,
   FileText,
@@ -23,8 +24,16 @@ const BRAND_LIGHT = "#F9EAE7";
 
 const navItems = [
   { label: "Beranda", href: "/user", icon: Home },
-  { label: "Buat Laporan", href: "/user/buatlaporan", icon: BarChart2 },
-  { label: "Laporan Saya", href: "/user/laporan-saya", icon: FileText },
+  {
+    label: "Buat Laporan",
+    href: "/user/buatlaporan",
+    icon: BarChart2,
+  },
+  {
+    label: "Laporan Saya",
+    href: "/user/laporan-saya",
+    icon: FileText,
+  },
 ];
 
 // ─────────────────────────────────────────────
@@ -61,7 +70,9 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const [hovered, setHovered] = useState<string | null>(null);
-  const [scrolled, setScrolled] = useState(false);
+
+  const [scrolled, setScrolled] =
+    useState(false);
 
   const [user, setUser] = useState({
     name: "User",
@@ -70,48 +81,98 @@ export default function Sidebar() {
     photo: null as string | null,
   });
 
-  // ── Load user ──
+  // ─────────────────────────────
+  // LOAD USER
+  // ─────────────────────────────
+
   const loadUser = () => {
-    const u = getUser();
+    const currentUser = getUser();
 
-    if (u) {
-      const savedPhoto = localStorage.getItem(`profilePhoto_${u.email}`);
+    if (!currentUser) return;
 
-      setUser(
-        buildUserState({
-          name: u.name,
-          bio: u.bio,
-          photo: savedPhoto,
-        })
-      );
-    }
+    // AMBIL SEMUA USERS
+    const users = JSON.parse(
+      localStorage.getItem("users") || "[]"
+    );
+
+    // CARI USER TERBARU
+    const latestUser =
+      users.find(
+        (u: any) =>
+          u.email === currentUser.email
+      ) || currentUser;
+
+    // AMBIL FOTO
+    const savedPhoto = localStorage.getItem(
+      `profilePhoto_${latestUser.email}`
+    );
+
+    // UPDATE STATE
+    setUser(
+      buildUserState({
+        name: latestUser.name,
+        bio: latestUser.bio,
+        photo: savedPhoto,
+      })
+    );
   };
+
+  // ─────────────────────────────
+  // LOAD + REALTIME UPDATE
+  // ─────────────────────────────
 
   useEffect(() => {
     loadUser();
 
-    const handler = () => loadUser();
+    const handler = () => {
+      loadUser();
+    };
 
-    window.addEventListener("storage", handler);
-    window.addEventListener("profileUpdated", handler);
+    window.addEventListener(
+      "storage",
+      handler
+    );
+
+    window.addEventListener(
+      "profileUpdated",
+      handler
+    );
 
     return () => {
-      window.removeEventListener("storage", handler);
-      window.removeEventListener("profileUpdated", handler);
+      window.removeEventListener(
+        "storage",
+        handler
+      );
+
+      window.removeEventListener(
+        "profileUpdated",
+        handler
+      );
     };
   }, []);
 
-  // ── Scroll Effect ──
+  // ─────────────────────────────
+  // SCROLL EFFECT
+  // ─────────────────────────────
+
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 40);
     };
 
-    window.addEventListener("scroll", onScroll, {
-      passive: true,
-    });
+    window.addEventListener(
+      "scroll",
+      onScroll,
+      {
+        passive: true,
+      }
+    );
 
-    return () => window.removeEventListener("scroll", onScroll);
+    return () =>
+      window.removeEventListener(
+        "scroll",
+        onScroll
+      );
   }, []);
 
   return (
@@ -119,14 +180,24 @@ export default function Sidebar() {
       style={{
         width: "264px",
         minHeight: "100vh",
+
         backgroundColor: "#ffffff",
-        borderRight: "1px solid #F0EFEF",
+
+        borderRight:
+          "1px solid #F0EFEF",
+
         display: "flex",
         flexDirection: "column",
-        fontFamily: "'Plus Jakarta Sans', 'Segoe UI', sans-serif",
+
+        fontFamily:
+          "'Plus Jakarta Sans', 'Segoe UI', sans-serif",
+
         transition: "all 0.35s ease",
+
         position: "relative",
+
         flexShrink: 0,
+
         overflow: "hidden",
 
         boxShadow: scrolled
@@ -134,19 +205,23 @@ export default function Sidebar() {
           : "none",
       }}
     >
-      {/* ── LOGO ── */}
+      {/* ───────────────── LOGO ───────────────── */}
       <div
         style={{
           padding: scrolled
             ? "14px 24px 12px"
             : "22px 24px 18px",
 
-          borderBottom: "1px solid #F5F5F5",
+          borderBottom:
+            "1px solid #F5F5F5",
 
           display: "flex",
+
           alignItems: "center",
 
-          minHeight: scrolled ? "64px" : "78px",
+          minHeight: scrolled
+            ? "64px"
+            : "78px",
 
           overflow: "hidden",
 
@@ -161,9 +236,13 @@ export default function Sidebar() {
             transition:
               "height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s",
 
-            height: scrolled ? "30px" : "38px",
+            height: scrolled
+              ? "30px"
+              : "38px",
 
-            opacity: scrolled ? 0.88 : 1,
+            opacity: scrolled
+              ? 0.88
+              : 1,
           }}
         >
           <Image
@@ -173,10 +252,17 @@ export default function Sidebar() {
             height={38}
             style={{
               objectFit: "contain",
-              objectPosition: "left center",
 
-              width: scrolled ? "126px" : "150px",
-              height: scrolled ? "30px" : "38px",
+              objectPosition:
+                "left center",
+
+              width: scrolled
+                ? "126px"
+                : "150px",
+
+              height: scrolled
+                ? "30px"
+                : "38px",
 
               transition:
                 "width 0.35s cubic-bezier(.4,0,.2,1), height 0.35s cubic-bezier(.4,0,.2,1)",
@@ -185,14 +271,20 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* ── PROFILE ── */}
+      {/* ───────────────── PROFILE ───────────────── */}
       <div
         style={{
           padding: "16px 16px 12px",
+
           transition: "padding 0.25s",
         }}
       >
-        <Link href="/user/profile" style={{ textDecoration: "none" }}>
+        <Link
+          href="/user/profile"
+          style={{
+            textDecoration: "none",
+          }}
+        >
           <div
             style={{
               backgroundColor:
@@ -205,7 +297,9 @@ export default function Sidebar() {
               padding: "13px 14px",
 
               display: "flex",
+
               alignItems: "center",
+
               gap: "12px",
 
               cursor: "pointer",
@@ -215,25 +309,37 @@ export default function Sidebar() {
 
               overflow: "hidden",
             }}
-            onMouseEnter={() => setHovered("profile")}
-            onMouseLeave={() => setHovered(null)}
+            onMouseEnter={() =>
+              setHovered("profile")
+            }
+            onMouseLeave={() =>
+              setHovered(null)
+            }
           >
             {/* AVATAR */}
             <div
               style={{
                 width: "40px",
                 height: "40px",
+
                 borderRadius: "50%",
+
                 overflow: "hidden",
 
-                backgroundColor: "rgba(255,255,255,0.25)",
+                backgroundColor:
+                  "rgba(255,255,255,0.25)",
 
                 display: "flex",
+
                 alignItems: "center",
-                justifyContent: "center",
+
+                justifyContent:
+                  "center",
 
                 fontSize: "14px",
+
                 fontWeight: 700,
+
                 color: "#fff",
 
                 flexShrink: 0,
@@ -246,6 +352,7 @@ export default function Sidebar() {
                   style={{
                     width: "100%",
                     height: "100%",
+
                     objectFit: "cover",
                   }}
                 />
@@ -258,6 +365,7 @@ export default function Sidebar() {
             <div
               style={{
                 overflow: "hidden",
+
                 flex: 1,
               }}
             >
@@ -266,13 +374,17 @@ export default function Sidebar() {
                   margin: 0,
 
                   fontSize: "14px",
+
                   fontWeight: 700,
 
                   color: "#fff",
 
                   whiteSpace: "nowrap",
+
                   overflow: "hidden",
-                  textOverflow: "ellipsis",
+
+                  textOverflow:
+                    "ellipsis",
                 }}
               >
                 {user.name}
@@ -285,11 +397,16 @@ export default function Sidebar() {
 
                     fontSize: "11px",
 
-                    color: "rgba(255,255,255,0.75)",
+                    color:
+                      "rgba(255,255,255,0.75)",
 
-                    whiteSpace: "nowrap",
+                    whiteSpace:
+                      "nowrap",
+
                     overflow: "hidden",
-                    textOverflow: "ellipsis",
+
+                    textOverflow:
+                      "ellipsis",
                   }}
                 >
                   {user.bio}
@@ -299,8 +416,11 @@ export default function Sidebar() {
 
             <span
               style={{
-                color: "rgba(255,255,255,0.7)",
+                color:
+                  "rgba(255,255,255,0.7)",
+
                 fontSize: "18px",
+
                 flexShrink: 0,
               }}
             >
@@ -310,92 +430,119 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      {/* ── NAVIGATION ── */}
+      {/* ───────────────── NAVIGATION ───────────────── */}
       <nav
         style={{
           padding: "8px 12px",
+
           flex: 1,
         }}
       >
-        {navItems.map(({ label, href, icon: Icon }) => {
-          const isActive = pathname === href;
-          const isHov = hovered === href;
+        {navItems.map(
+          ({
+            label,
+            href,
+            icon: Icon,
+          }) => {
+            const isActive =
+              pathname === href;
 
-          return (
-            <button
-              key={href}
-              onClick={() => (window.location.href = href)}
-              onMouseEnter={() => setHovered(href)}
-              onMouseLeave={() => setHovered(null)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
+            const isHov =
+              hovered === href;
 
-                padding: "11px 14px",
-
-                borderRadius: "10px",
-
-                marginBottom: "4px",
-
-                width: "100%",
-
-                border: "none",
-
-                backgroundColor: isActive
-                  ? BRAND
-                  : isHov
-                  ? BRAND_LIGHT
-                  : "transparent",
-
-                borderLeft: isActive
-                  ? `3px solid ${BRAND_DARK}`
-                  : "3px solid transparent",
-
-                transition: "all 0.2s ease",
-
-                cursor: "pointer",
-
-                textAlign: "left",
-
-                overflow: "hidden",
-              }}
-            >
-              <Icon
-                size={20}
-                color={
-                  isActive
-                    ? "#fff"
-                    : isHov
-                    ? BRAND
-                    : "#6B7280"
+            return (
+              <button
+                key={href}
+                onClick={() =>
+                  (window.location.href =
+                    href)
                 }
-                style={{ flexShrink: 0 }}
-              />
-
-              <span
+                onMouseEnter={() =>
+                  setHovered(href)
+                }
+                onMouseLeave={() =>
+                  setHovered(null)
+                }
                 style={{
-                  fontSize: "14px",
+                  display: "flex",
 
-                  fontWeight: isActive ? 700 : 500,
+                  alignItems: "center",
 
-                  color: isActive
-                    ? "#fff"
-                    : isHov
-                    ? BRAND
-                    : "#374151",
+                  gap: "12px",
 
-                  whiteSpace: "nowrap",
+                  padding: "11px 14px",
+
+                  borderRadius: "10px",
+
+                  marginBottom: "4px",
+
+                  width: "100%",
+
+                  border: "none",
+
+                  backgroundColor:
+                    isActive
+                      ? BRAND
+                      : isHov
+                      ? BRAND_LIGHT
+                      : "transparent",
+
+                  borderLeft: isActive
+                    ? `3px solid ${BRAND_DARK}`
+                    : "3px solid transparent",
+
+                  transition:
+                    "all 0.2s ease",
+
+                  cursor: "pointer",
+
+                  textAlign: "left",
+
+                  overflow: "hidden",
                 }}
               >
-                {label}
-              </span>
-            </button>
-          );
-        })}
+                <Icon
+                  size={20}
+                  color={
+                    isActive
+                      ? "#fff"
+                      : isHov
+                      ? BRAND
+                      : "#6B7280"
+                  }
+                  style={{
+                    flexShrink: 0,
+                  }}
+                />
+
+                <span
+                  style={{
+                    fontSize: "14px",
+
+                    fontWeight:
+                      isActive
+                        ? 700
+                        : 500,
+
+                    color: isActive
+                      ? "#fff"
+                      : isHov
+                      ? BRAND
+                      : "#374151",
+
+                    whiteSpace:
+                      "nowrap",
+                  }}
+                >
+                  {label}
+                </span>
+              </button>
+            );
+          }
+        )}
       </nav>
 
-      {/* ── LOGOUT ── */}
+      {/* ───────────────── LOGOUT ───────────────── */}
       <div
         style={{
           padding: "0 12px 24px",
@@ -404,7 +551,10 @@ export default function Sidebar() {
         <div
           style={{
             height: "1px",
-            backgroundColor: "#F0EFEF",
+
+            backgroundColor:
+              "#F0EFEF",
+
             marginBottom: "10px",
           }}
         />
@@ -412,7 +562,9 @@ export default function Sidebar() {
         <button
           style={{
             display: "flex",
+
             alignItems: "center",
+
             gap: "12px",
 
             padding: "11px 14px",
@@ -430,12 +582,17 @@ export default function Sidebar() {
 
             cursor: "pointer",
 
-            transition: "background-color 0.15s",
+            transition:
+              "background-color 0.15s",
 
             overflow: "hidden",
           }}
-          onMouseEnter={() => setHovered("logout")}
-          onMouseLeave={() => setHovered(null)}
+          onMouseEnter={() =>
+            setHovered("logout")
+          }
+          onMouseLeave={() =>
+            setHovered(null)
+          }
           onClick={logout}
         >
           <LogOut
@@ -445,12 +602,15 @@ export default function Sidebar() {
                 ? BRAND
                 : "#6B7280"
             }
-            style={{ flexShrink: 0 }}
+            style={{
+              flexShrink: 0,
+            }}
           />
 
           <span
             style={{
               fontSize: "14px",
+
               fontWeight: 500,
 
               color:

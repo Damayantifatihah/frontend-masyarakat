@@ -144,6 +144,28 @@ export default function ProfilePage() {
   };
 
   // ==============================
+  // REMOVE PHOTO
+  // ==============================
+  const removePhoto = () => {
+    const currentUser = getUser();
+
+    if (!currentUser?.email) return;
+
+    // HAPUS FOTO DARI STORAGE
+    localStorage.removeItem(
+      `profilePhoto_${currentUser.email}`
+    );
+
+    // RESET STATE
+    setPhoto(null);
+
+    // UPDATE REALTIME
+    window.dispatchEvent(
+      new Event("profileUpdated")
+    );
+  };
+
+  // ==============================
   // CLEANUP CAMERA
   // ==============================
   useEffect(() => {
@@ -285,14 +307,27 @@ export default function ProfilePage() {
                   </div>
                 )}
 
-                {/* CAMERA BUTTON */}
+                {/* ACTION BUTTONS */}
                 {isEditing && (
-                  <button
-                    onClick={openCamera}
-                    className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-[#E8763A] hover:bg-[#C95E24] flex items-center justify-center shadow-md transition"
-                  >
-                    📷
-                  </button>
+                  <>
+                    {/* CAMERA */}
+                    <button
+                      onClick={openCamera}
+                      className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-[#E8763A] hover:bg-[#C95E24] flex items-center justify-center shadow-md transition"
+                    >
+                      📷
+                    </button>
+
+                    {/* DELETE PHOTO */}
+                    {photo && (
+                      <button
+                        onClick={removePhoto}
+                        className="absolute -bottom-1 -left-1 w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-md transition text-white"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
 

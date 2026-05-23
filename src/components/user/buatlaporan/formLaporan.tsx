@@ -143,49 +143,25 @@ export default function FormLaporan() {
   // ─────────────────────────────────────────────
 
   return (
-    <div
-      style={{
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        width: "100%",
-        maxWidth: "720px",
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: "#fff",
-          borderRadius: "20px",
-          border: "1px solid #F0F0F0",
-          overflow: "hidden",
-        }}
-      >
+    <div className="font-[Plus_Jakarta_Sans,sans-serif] w-full max-w-[720px]">
+      <div className="bg-white rounded-[20px] border border-[#F0F0F0] overflow-hidden">
+
         {/* HEADER */}
-        <div style={{ backgroundColor: "#B45743", padding: "22px 28px" }}>
-          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.75)", fontWeight: 500, marginBottom: "4px" }}>
+        <div className="bg-[#B45743] px-7 py-[22px]">
+          <p className="text-xs text-white/75 font-medium mb-1">
             Buat Laporan Baru
           </p>
-          <h1 style={{ fontSize: "20px", fontWeight: 800, color: "#fff" }}>
+          <h1 className="text-xl font-extrabold text-white">
             Sampaikan Laporan Anda
           </h1>
         </div>
 
         {/* BODY */}
-        <div style={{ padding: "28px", display: "flex", flexDirection: "column", gap: "22px" }}>
+        <div className="p-7 flex flex-col gap-[22px]">
 
           {/* ALERT SUCCESS */}
           {successMsg && (
-            <div
-              style={{
-                backgroundColor: "#F0FDF4",
-                border: "1px solid #BBF7D0",
-                color: "#15803D",
-                fontSize: "14px",
-                borderRadius: "12px",
-                padding: "12px 16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
+            <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" />
               </svg>
@@ -195,19 +171,7 @@ export default function FormLaporan() {
 
           {/* ALERT ERROR */}
           {errorMsg && (
-            <div
-              style={{
-                backgroundColor: "#FEF2F2",
-                border: "1px solid #FECACA",
-                color: "#DC2626",
-                fontSize: "14px",
-                borderRadius: "12px",
-                padding: "12px 16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
+            <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3 flex items-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
@@ -222,31 +186,23 @@ export default function FormLaporan() {
               value={judul}
               onChange={(e) => setJudul(e.target.value)}
               placeholder="Contoh: Jalan berlubang di depan pasar"
-              style={inputStyle}
+              className={inputClass}
             />
           </Field>
 
           {/* KATEGORI */}
           <Field label="Kategori" icon="🏷️">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategoryId(cat.id)}
-                  style={{
-                    height: "34px",
-                    padding: "0 16px",
-                    borderRadius: "100px",
-                    border: `1.5px solid ${selectedCategoryId === cat.id ? "#B45743" : "#E5E7EB"}`,
-                    backgroundColor: selectedCategoryId === cat.id ? "#F9EAE7" : "#fff",
-                    color: selectedCategoryId === cat.id ? "#8B3A2A" : "#6B7280",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    transition: "all 0.15s",
-                  }}
+                  className={`h-[34px] px-4 rounded-full text-[13px] font-semibold cursor-pointer transition-all duration-150 font-[inherit] border-[1.5px] ${
+                    selectedCategoryId === cat.id
+                      ? "border-[#B45743] bg-[#F9EAE7] text-[#8B3A2A]"
+                      : "border-gray-200 bg-white text-gray-500"
+                  }`}
                 >
                   {cat.name}
                 </button>
@@ -255,14 +211,14 @@ export default function FormLaporan() {
           </Field>
 
           {/* LOKASI + TANGGAL — 2 kolom */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <div className="grid grid-cols-2 gap-4">
             <Field label="Lokasi Kejadian" icon="📍">
               <textarea
                 rows={3}
                 value={lokasi}
                 onChange={(e) => setLokasi(e.target.value)}
                 placeholder="Masukkan alamat atau deskripsi lokasi kejadian"
-                style={{ ...inputStyle, height: "auto", padding: "10px 14px", resize: "none", lineHeight: 1.6 }}
+                className={`${inputClass} !h-auto py-[10px] resize-none leading-relaxed`}
               />
             </Field>
             <Field label="Tanggal Kejadian" icon="📅">
@@ -270,7 +226,7 @@ export default function FormLaporan() {
                 type="date"
                 value={tanggalKejadian}
                 onChange={(e) => setTanggalKejadian(e.target.value)}
-                style={inputStyle}
+                className={inputClass}
               />
             </Field>
           </div>
@@ -282,13 +238,13 @@ export default function FormLaporan() {
               value={deskripsi}
               onChange={(e) => setDeskripsi(e.target.value)}
               placeholder="Jelaskan kronologi dan detail lengkap kejadian yang ingin dilaporkan"
-              style={{ ...inputStyle, height: "auto", padding: "10px 14px", resize: "none", lineHeight: 1.6 }}
+              className={`${inputClass} !h-auto py-[10px] resize-none leading-relaxed`}
             />
           </Field>
 
           {/* FOTO */}
           <Field label="Lampiran Foto" icon="🖼️">
-            <p style={{ fontSize: "12px", color: "#9CA3AF", marginTop: "-4px" }}>
+            <p className="text-xs text-gray-400 -mt-1">
               Maksimal 3 foto · JPG atau PNG · Ukuran maks 5MB per foto
             </p>
 
@@ -298,65 +254,30 @@ export default function FormLaporan() {
               multiple
               ref={fileInputRef}
               onChange={handleImageChange}
-              style={{ display: "none" }}
+              className="hidden"
             />
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginTop: "8px" }}>
+            <div className="flex flex-wrap gap-3 mt-2">
               {previewImages.length < 3 && (
                 <div
                   onClick={handleOpenFile}
-                  style={{
-                    width: "100px",
-                    height: "100px",
-                    borderRadius: "14px",
-                    border: "2px dashed #B45743",
-                    backgroundColor: "#F9EAE7",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    gap: "4px",
-                  }}
+                  className="w-[100px] h-[100px] rounded-[14px] border-2 border-dashed border-[#B45743] bg-[#F9EAE7] flex flex-col items-center justify-center cursor-pointer gap-1"
                 >
-                  <span style={{ fontSize: "24px", color: "#B45743", lineHeight: 1 }}>+</span>
-                  <span style={{ fontSize: "12px", color: "#8B3A2A", fontWeight: 600 }}>Tambah</span>
+                  <span className="text-2xl text-[#B45743] leading-none">+</span>
+                  <span className="text-xs text-[#8B3A2A] font-semibold">Tambah</span>
                 </div>
               )}
 
               {previewImages.map((img, index) => (
                 <div
                   key={index}
-                  style={{
-                    position: "relative",
-                    width: "100px",
-                    height: "100px",
-                    borderRadius: "14px",
-                    overflow: "hidden",
-                    border: "1px solid #E5E7EB",
-                  }}
+                  className="relative w-[100px] h-[100px] rounded-[14px] overflow-hidden border border-gray-200"
                 >
                   <Image src={img} alt="preview" fill style={{ objectFit: "cover" }} />
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(index)}
-                    style={{
-                      position: "absolute",
-                      top: "5px",
-                      right: "5px",
-                      width: "22px",
-                      height: "22px",
-                      borderRadius: "50%",
-                      background: "rgba(0,0,0,0.55)",
-                      color: "#fff",
-                      fontSize: "14px",
-                      border: "none",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      lineHeight: 1,
-                    }}
+                    className="absolute top-[5px] right-[5px] w-[22px] h-[22px] rounded-full bg-black/55 text-white text-sm border-none cursor-pointer flex items-center justify-center leading-none"
                   >
                     ×
                   </button>
@@ -366,34 +287,31 @@ export default function FormLaporan() {
           </Field>
 
           {/* DIVIDER */}
-          <div style={{ borderTop: "1px solid #F3F4F6" }} />
+          <div className="border-t border-gray-100" />
 
           {/* SUBMIT */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              style={{
-                height: "44px",
-                padding: "0 28px",
-                borderRadius: "12px",
-                backgroundColor: loading ? "#C97A68" : "#B45743",
-                color: "#fff",
-                fontSize: "14px",
-                fontWeight: 800,
-                border: "none",
-                cursor: loading ? "not-allowed" : "pointer",
-                fontFamily: "inherit",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                transition: "background 0.15s",
-              }}
+              className={`h-11 px-7 rounded-xl text-white text-sm font-extrabold border-none font-[inherit] flex items-center gap-2 transition-colors duration-150 ${
+                loading ? "bg-[#C97A68] cursor-not-allowed" : "bg-[#B45743] cursor-pointer"
+              }`}
             >
               {loading ? (
                 <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="animate-spin"
+                  >
                     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
                   Mengirim...
@@ -411,8 +329,6 @@ export default function FormLaporan() {
 
         </div>
       </div>
-
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -421,18 +337,8 @@ export default function FormLaporan() {
 // HELPERS
 // ─────────────────────────────────────────────
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  height: "44px",
-  borderRadius: "12px",
-  border: "1.5px solid #E5E7EB",
-  padding: "0 14px",
-  fontSize: "14px",
-  color: "#111827",
-  outline: "none",
-  fontFamily: "inherit",
-  backgroundColor: "#fff",
-};
+const inputClass =
+  "w-full h-11 rounded-xl border-[1.5px] border-gray-200 px-[14px] text-sm text-gray-900 outline-none font-[inherit] bg-white";
 
 function Field({
   label,
@@ -444,18 +350,9 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <label
-        style={{
-          fontSize: "13px",
-          fontWeight: 700,
-          color: "#374151",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-        }}
-      >
-        <span style={{ fontSize: "15px" }}>{icon}</span>
+    <div className="flex flex-col gap-2">
+      <label className="text-[13px] font-bold text-gray-700 flex items-center gap-[6px]">
+        <span className="text-[15px]">{icon}</span>
         {label}
       </label>
       {children}

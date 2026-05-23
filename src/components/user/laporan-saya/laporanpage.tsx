@@ -165,76 +165,70 @@ export default function LaporanSaya() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F8F8F8", fontFamily: "'Plus Jakarta Sans', sans-serif", padding: "32px 36px" }}>
-      <div style={{ maxWidth: 860, margin: "0 auto" }}>
+    <div className="min-h-screen bg-[#F8F8F8] font-[Plus_Jakarta_Sans,sans-serif] px-9 py-8">
+      <div className="max-w-[860px] mx-auto">
 
         {/* ── HEADER ── */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#111827" }}>Laporan Saya</h1>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "#9CA3AF" }}>
+        <div className="mb-7">
+          <h1 className="m-0 text-[22px] font-extrabold text-gray-900">Laporan Saya</h1>
+          <p className="mt-1 mb-0 text-[13px] text-gray-400">
             Pantau semua status laporan yang telah Anda kirimkan
           </p>
         </div>
 
         {/* ── STATS ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 24 }}>
+        <div className="grid grid-cols-4 gap-[14px] mb-6">
           {(["Verifikasi", "Diproses", "Selesai", "Ditolak"] as StatusKey[]).map((s) => {
             const c = stCfg[s];
             return (
-              <div key={s} style={{
-                background: "#fff", borderRadius: 14, padding: "16px 18px",
-                border: "1px solid #F0F0F0", overflow: "hidden", position: "relative",
-              }}>
-                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: c.barColor }} />
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: c.iconBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div key={s} className="bg-white rounded-[14px] px-[18px] py-4 border border-[#F0F0F0] overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: c.barColor }} />
+                <div className="flex justify-between items-start mb-2">
+                  <div className="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center" style={{ background: c.iconBg }}>
                     <c.Icon size={18} color={c.iconColor} />
                   </div>
-                  <span style={{ fontSize: 26, fontWeight: 800, color: c.numColor, lineHeight: 1 }}>{countOf(s)}</span>
+                  <span className="text-[26px] font-extrabold leading-none" style={{ color: c.numColor }}>{countOf(s)}</span>
                 </div>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s}</p>
+                <p className="m-0 text-[11px] font-bold text-gray-400 uppercase tracking-[0.06em]">{s}</p>
               </div>
             );
           })}
         </div>
 
         {/* ── SEARCH & FILTER ── */}
-        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #F0F0F0", padding: "16px", marginBottom: 24 }}>
+        <div className="bg-white rounded-[14px] border border-[#F0F0F0] p-4 mb-6">
           {/* Search input */}
-          <div style={{ position: "relative", marginBottom: 14 }}>
-            <Search size={16} color="#9CA3AF" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
+          <div className="relative mb-[14px]">
+            <Search size={16} color="#9CA3AF" className="absolute left-[14px] top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Cari berdasarkan judul atau lokasi..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{
-                width: "100%", padding: "10px 14px 10px 40px", borderRadius: 10,
-                border: "1.5px solid #E5E7EB", fontSize: 13, outline: "none",
-                background: "#F9FAFB", color: "#111827", fontFamily: "inherit",
-                boxSizing: "border-box",
-              }}
+              className="w-full py-[10px] pl-10 pr-[14px] rounded-[10px] border-[1.5px] border-gray-200 text-[13px] outline-none bg-gray-50 text-gray-900 font-[inherit] box-border"
             />
           </div>
 
           {/* Filter pills */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: 12, borderTop: "1px solid #F3F4F6" }}>
+          <div className="flex gap-2 flex-wrap pt-3 border-t border-gray-100">
             {statuses.map((s) => {
               const active = filter === s;
               return (
-                <button key={s} onClick={() => setFilter(s)} style={{
-                  padding: "7px 16px", borderRadius: 100,
-                  border: `1.5px solid ${active ? PRIMARY : "#E5E7EB"}`,
-                  background: active ? PRIMARY : "#fff",
-                  color: active ? "#fff" : "#6B7280",
-                  fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                  transition: "all 0.15s",
-                }}>
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  className="py-[7px] px-4 rounded-full text-xs font-bold cursor-pointer font-[inherit] transition-all duration-150 border-[1.5px]"
+                  style={{
+                    border: `1.5px solid ${active ? PRIMARY : "#E5E7EB"}`,
+                    background: active ? PRIMARY : "#fff",
+                    color: active ? "#fff" : "#6B7280",
+                  }}
+                >
                   {s}{s !== "Semua" ? ` (${countOf(s)})` : ""}
                 </button>
               );
             })}
-            <span style={{ marginLeft: "auto", fontSize: 12, color: "#9CA3AF", alignSelf: "center" }}>
+            <span className="ml-auto text-xs text-gray-400 self-center">
               {filtered.length} laporan
             </span>
           </div>
@@ -242,91 +236,76 @@ export default function LaporanSaya() {
 
         {/* ── LIST ── */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "60px 0", color: "#9CA3AF" }}>
-            <div style={{
-              width: 32, height: 32, border: `3px solid ${PRIMARY_BG}`,
-              borderTopColor: PRIMARY, borderRadius: "50%",
-              animation: "spin 0.8s linear infinite", margin: "0 auto 12px",
-            }} />
-            <p style={{ fontSize: 13, fontWeight: 500 }}>Memuat laporan...</p>
+          <div className="text-center py-[60px] text-gray-400">
+            <div
+              className="w-8 h-8 rounded-full border-[3px] animate-spin mx-auto mb-3"
+              style={{ borderColor: PRIMARY_BG, borderTopColor: PRIMARY }}
+            />
+            <p className="text-[13px] font-medium">Memuat laporan...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{
-            background: "#fff", borderRadius: 16, border: "1px solid #F0F0F0",
-            padding: "60px 24px", textAlign: "center",
-          }}>
-            <div style={{ width: 56, height: 56, borderRadius: 14, background: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+          <div className="bg-white rounded-2xl border border-[#F0F0F0] py-[60px] px-6 text-center">
+            <div className="w-14 h-14 rounded-[14px] bg-gray-100 flex items-center justify-center mx-auto mb-[14px]">
               <FileX size={28} color="#D1D5DB" />
             </div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#374151" }}>Tidak ada laporan ditemukan</p>
-            <p style={{ margin: "6px 0 0", fontSize: 13, color: "#9CA3AF" }}>Coba sesuaikan kata kunci atau filter status.</p>
+            <p className="m-0 text-[15px] font-bold text-gray-700">Tidak ada laporan ditemukan</p>
+            <p className="mt-[6px] mb-0 text-[13px] text-gray-400">Coba sesuaikan kata kunci atau filter status.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className="flex flex-col gap-4">
             {filtered.map((r) => {
               const sf = formatStatus(r.status);
               const cc = catCfg[r.category_name] ?? defaultCat;
               const sc = stCfg[sf];
 
               return (
-                <div key={r.id} style={{
-                  background: "#fff", borderRadius: 16,
-                  border: "1px solid #F0F0F0",
-                  overflow: "hidden",
-                  position: "relative",
-                }}>
+                <div key={r.id} className="bg-white rounded-2xl border border-[#F0F0F0] overflow-hidden relative">
                   {/* Top accent bar */}
-                  <div style={{ height: 4, background: cc.barColor }} />
+                  <div className="h-1" style={{ background: cc.barColor }} />
 
-                  <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
+                  <div className="px-[22px] py-5 flex flex-col gap-4">
 
                     {/* Top row: category + status */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: 10, background: cc.iconBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div className="flex items-center justify-between flex-wrap gap-[10px]">
+                      <div className="flex items-center gap-[10px]">
+                        <div className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: cc.iconBg }}>
                           <cc.Icon size={16} color={cc.iconColor} />
                         </div>
-                        <span style={{
-                          fontSize: 12, fontWeight: 700, padding: "4px 12px",
-                          borderRadius: 100, background: cc.tagBg,
-                          color: cc.tagColor, border: `1px solid ${cc.tagBorder}`,
-                        }}>
+                        <span
+                          className="text-xs font-bold py-1 px-3 rounded-full border"
+                          style={{ background: cc.tagBg, color: cc.tagColor, borderColor: cc.tagBorder }}
+                        >
                           {r.category_name}
                         </span>
                       </div>
 
-                      <span style={{
-                        display: "inline-flex", alignItems: "center", gap: 6,
-                        padding: "5px 12px", borderRadius: 100, fontSize: 12, fontWeight: 700,
-                        background: sc.bg, color: sc.color, border: `1px solid ${sc.border}`,
-                      }}>
+                      <span
+                        className="inline-flex items-center gap-[6px] py-[5px] px-3 rounded-full text-xs font-bold border"
+                        style={{ background: sc.bg, color: sc.color, borderColor: sc.border }}
+                      >
                         <sc.Icon size={13} color={sc.iconColor} />
                         {sc.label}
                       </span>
                     </div>
 
                     {/* Judul */}
-                    <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "#111827", lineHeight: 1.3 }}>
+                    <h2 className="m-0 text-[17px] font-extrabold text-gray-900 leading-snug">
                       {r.judul_laporan}
                     </h2>
 
                     {/* Lokasi + Tanggal */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div className="grid grid-cols-2 gap-3">
                       {[
                         { Icon: MapPin,       color: PRIMARY,    label: "Lokasi",           value: r.lokasi || "-" },
                         { Icon: CalendarDays, color: "#2563EB",  label: "Tanggal Kejadian", value: formatTanggal(r.tanggal_kejadian) },
                       ].map(({ Icon, color, label, value }) => (
-                        <div key={label} style={{
-                          background: "#F9FAFB", borderRadius: 12, padding: "12px 14px",
-                          display: "flex", alignItems: "center", gap: 10,
-                          border: "1px solid #F0F0F0",
-                        }}>
-                          <div style={{ width: 34, height: 34, borderRadius: 10, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid #F0F0F0" }}>
+                        <div key={label} className="bg-gray-50 rounded-xl px-[14px] py-3 flex items-center gap-[10px] border border-[#F0F0F0]">
+                          <div className="w-[34px] h-[34px] rounded-[10px] bg-white flex items-center justify-center shrink-0 border border-[#F0F0F0]">
                             <Icon size={16} color={color} />
                           </div>
-                          <div style={{ overflow: "hidden" }}>
-                            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</p>
-                            <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 600, color: "#374151", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</p>
+                          <div className="overflow-hidden">
+                            <p className="m-0 text-[10px] font-bold text-gray-400 uppercase tracking-[0.06em]">{label}</p>
+                            <p className="mt-[2px] mb-0 text-[13px] font-semibold text-gray-600 truncate">{value}</p>
                           </div>
                         </div>
                       ))}
@@ -334,16 +313,14 @@ export default function LaporanSaya() {
 
                     {/* Deskripsi */}
                     <div>
-                      <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                      <p className="m-0 mb-2 text-[11px] font-bold text-gray-400 uppercase tracking-[0.06em]">
                         Deskripsi Laporan
                       </p>
-                      <div style={{
-                        background: "#F9FAFB", borderRadius: 12, padding: "14px 16px",
-                        borderLeft: `4px solid ${cc.leftBorder}`,
-                        border: `1px solid #F0F0F0`,
-                        borderLeftColor: cc.leftBorder,
-                      }}>
-                        <p style={{ margin: 0, fontSize: 13, color: "#4B5563", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                      <div
+                        className="bg-gray-50 rounded-xl px-4 py-[14px] border border-[#F0F0F0]"
+                        style={{ borderLeftWidth: 4, borderLeftColor: cc.leftBorder }}
+                      >
+                        <p className="m-0 text-[13px] text-gray-500 leading-[1.7] whitespace-pre-wrap">
                           {r.isi_laporan}
                         </p>
                       </div>
@@ -352,16 +329,16 @@ export default function LaporanSaya() {
                     {/* Foto */}
                     {r.gambar && r.gambar.length > 0 && (
                       <div>
-                        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                        <p className="m-0 mb-2 text-[11px] font-bold text-gray-400 uppercase tracking-[0.06em]">
                           Foto Lampiran ({r.gambar.length})
                         </p>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+                        <div className="grid grid-cols-4 gap-[10px]">
                           {r.gambar.map((img, idx) => (
-                            <div key={idx} style={{ aspectRatio: "1", borderRadius: 12, overflow: "hidden", border: "1px solid #F0F0F0", background: "#F3F4F6" }}>
+                            <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-[#F0F0F0] bg-gray-100">
                               <img
                                 src={img}
                                 alt={`Foto ${idx + 1}`}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                className="w-full h-full object-cover"
                                 onError={(e) => { (e.target as HTMLImageElement).src = "/images/placeholder.png"; }}
                               />
                             </div>
@@ -372,19 +349,19 @@ export default function LaporanSaya() {
 
                     {/* Tanggapan admin */}
                     {r.tanggapan?.trim() && (
-                      <div style={{
-                        background: PRIMARY_BG, borderRadius: 12, padding: "14px 16px",
-                        border: `1px solid ${PRIMARY_BORDER}`,
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                          <div style={{ width: 30, height: 30, borderRadius: 8, background: "#F0D0C8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div
+                        className="rounded-xl px-4 py-[14px] border"
+                        style={{ background: PRIMARY_BG, borderColor: PRIMARY_BORDER }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-[30px] h-[30px] rounded-lg flex items-center justify-center" style={{ background: "#F0D0C8" }}>
                             <MessageSquareMore size={14} color={PRIMARY} />
                           </div>
-                          <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: PRIMARY_DARK }}>
+                          <p className="m-0 text-xs font-extrabold" style={{ color: PRIMARY_DARK }}>
                             Tanggapan Resmi Admin
                           </p>
                         </div>
-                        <p style={{ margin: 0, fontSize: 13, color: "#4B5563", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+                        <p className="m-0 text-[13px] text-gray-500 leading-[1.7] whitespace-pre-wrap">
                           {r.tanggapan}
                         </p>
                       </div>
@@ -396,7 +373,6 @@ export default function LaporanSaya() {
           </div>
         )}
       </div>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
