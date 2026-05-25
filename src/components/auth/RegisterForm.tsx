@@ -15,6 +15,9 @@ export default function RegisterPage() {
   const [showConfirm, setShowConfirm] =
     useState(false);
 
+  const [loading, setLoading] =
+    useState(false);
+
   const [name, setName] = useState("");
 
   const [email, setEmail] =
@@ -43,6 +46,50 @@ export default function RegisterPage() {
   ) => {
     e.preventDefault();
 
+    // VALIDASI NAMA
+    if (name.trim().length < 3) {
+      return alert(
+        "Nama minimal 3 karakter"
+      );
+    }
+
+    // VALIDASI EMAIL
+    const emailRegex =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      return alert(
+        "Format email tidak valid"
+      );
+    }
+
+    // VALIDASI NO TELP
+    const phoneRegex =
+      /^[0-9]{10,15}$/;
+
+    if (!phoneRegex.test(no_tlp)) {
+      return alert(
+        "Nomor telepon harus 10-15 digit angka"
+      );
+    }
+
+    // VALIDASI NIK
+    const nikRegex = /^[0-9]{16}$/;
+
+    if (!nikRegex.test(nik)) {
+      return alert(
+        "NIK harus 16 digit angka"
+      );
+    }
+
+    // VALIDASI PASSWORD
+    if (password.length < 6) {
+      return alert(
+        "Password minimal 6 karakter"
+      );
+    }
+
+    // KONFIRMASI PASSWORD
     if (
       password !== confirmPassword
     ) {
@@ -52,6 +99,8 @@ export default function RegisterPage() {
     }
 
     try {
+      setLoading(true);
+
       const res = await api.post(
         "/auth/register",
         {
@@ -72,13 +121,15 @@ export default function RegisterPage() {
           ?.message ||
           "Register gagal"
       );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen w-full bg-white overflow-hidden font-[Poppins,sans-serif]">
       <div className="relative w-full min-h-screen flex">
-        {/* ── Background ── */}
+        {/* BACKGROUND */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/regist.png"
@@ -89,7 +140,7 @@ export default function RegisterPage() {
           />
         </div>
 
-        {/* ── LEFT CONTENT ── */}
+        {/* LEFT CONTENT */}
         <div className="relative z-10 hidden lg:flex w-[45%] shrink-0 items-center">
           <div className="pl-14 max-w-[400px]">
             <div className="mb-8">
@@ -122,7 +173,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* ── RIGHT FORM ── */}
+        {/* RIGHT FORM */}
         <div className="relative z-10 flex-1 flex items-center justify-center px-8 py-12">
           <div className="w-full max-w-[600px]">
             <h1 className="text-white text-[36px] font-extrabold text-center mb-10 tracking-wide drop-shadow">
@@ -135,7 +186,7 @@ export default function RegisterPage() {
               }
               className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5"
             >
-              {/* Nama */}
+              {/* NAMA */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-white font-semibold text-[13px]">
                   Nama Lengkap
@@ -155,7 +206,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Email */}
+              {/* EMAIL */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-white font-semibold text-[13px]">
                   Email
@@ -175,7 +226,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* No Telp */}
+              {/* NO TELP */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-white font-semibold text-[13px]">
                   No. Telp Aktif
@@ -187,7 +238,10 @@ export default function RegisterPage() {
                   value={no_tlp}
                   onChange={(e) =>
                     setNoTlp(
-                      e.target.value
+                      e.target.value.replace(
+                        /[^0-9]/g,
+                        ""
+                      )
                     )
                   }
                   className="w-full h-[50px] rounded-xl bg-white px-4 text-[14px] text-gray-900 outline-none"
@@ -205,9 +259,13 @@ export default function RegisterPage() {
                   type="text"
                   placeholder="Masukkan NIK"
                   value={nik}
+                  maxLength={16}
                   onChange={(e) =>
                     setNik(
-                      e.target.value
+                      e.target.value.replace(
+                        /[^0-9]/g,
+                        ""
+                      )
                     )
                   }
                   className="w-full h-[50px] rounded-xl bg-white px-4 text-[14px] text-gray-900 outline-none"
@@ -215,7 +273,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Password */}
+              {/* PASSWORD */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-white font-semibold text-[13px]">
                   Kata Sandi
@@ -253,7 +311,7 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Confirm Password */}
+              {/* CONFIRM PASSWORD */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-white font-semibold text-[13px]">
                   Konfirmasi Kata
@@ -298,9 +356,12 @@ export default function RegisterPage() {
               <div className="md:col-span-2 flex flex-col items-center mt-5 gap-4">
                 <button
                   type="submit"
-                  className="w-full h-[52px] rounded-xl bg-[#E8734A] hover:bg-[#d4603a] text-white font-bold transition"
+                  disabled={loading}
+                  className="w-full h-[52px] rounded-xl bg-[#E8734A] hover:bg-[#d4603a] text-white font-bold transition disabled:opacity-60"
                 >
-                  Daftar
+                  {loading
+                    ? "Loading..."
+                    : "Daftar"}
                 </button>
 
                 <Link

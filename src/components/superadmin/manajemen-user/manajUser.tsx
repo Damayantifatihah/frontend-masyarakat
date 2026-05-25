@@ -8,6 +8,7 @@ import {
   Search,
   Mail,
   Shield,
+  Trash2,
 } from "lucide-react";
 
 interface User {
@@ -23,9 +24,11 @@ export default function ManajemenUser() {
   const [filteredUsers, setFilteredUsers] =
     useState<User[]>([]);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
     fetchUsers();
@@ -40,6 +43,10 @@ export default function ManajemenUser() {
 
     setFilteredUsers(result);
   }, [search, users]);
+
+  // =========================
+  // FETCH USERS
+  // =========================
 
   const fetchUsers = async () => {
     try {
@@ -57,8 +64,43 @@ export default function ManajemenUser() {
     }
   };
 
+  // =========================
+  // DELETE USER
+  // =========================
+
+  const handleDelete = async (
+    id: number
+  ) => {
+    const confirmDelete =
+      window.confirm(
+        "Yakin ingin menghapus user ini?"
+      );
+
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(
+        `/superadmin/users/${id}`
+      );
+
+      // REFRESH DATA
+      fetchUsers();
+
+      alert(
+        "User berhasil dihapus"
+      );
+    } catch (error) {
+      console.log(error);
+
+      alert(
+        "Gagal menghapus user"
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
+      
       {/* HEADER */}
       <div className="mb-8 flex items-center justify-between">
         <div>
@@ -114,7 +156,9 @@ export default function ManajemenUser() {
       {/* TABLE */}
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px]">
+          <table className="w-full min-w-[850px]">
+            
+            {/* TABLE HEAD */}
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
@@ -128,23 +172,29 @@ export default function ManajemenUser() {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
                   Role
                 </th>
+
+                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">
+                  Action
+                </th>
               </tr>
             </thead>
 
+            {/* TABLE BODY */}
             <tbody>
               {loading ? (
                 <tr>
                   <td
-                    colSpan={3}
+                    colSpan={4}
                     className="px-6 py-10 text-center text-gray-500"
                   >
                     Loading...
                   </td>
                 </tr>
-              ) : filteredUsers.length === 0 ? (
+              ) : filteredUsers.length ===
+                0 ? (
                 <tr>
                   <td
-                    colSpan={3}
+                    colSpan={4}
                     className="px-6 py-10 text-center text-gray-500"
                   >
                     User tidak ditemukan
@@ -154,11 +204,13 @@ export default function ManajemenUser() {
                 filteredUsers.map((user) => (
                   <tr
                     key={user.id}
-                    className="border-t border-gray-100"
+                    className="border-t border-gray-100 hover:bg-gray-50 transition"
                   >
+                    
                     {/* NAME */}
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
+                        
                         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600">
                           {user.name
                             .charAt(0)
@@ -182,7 +234,9 @@ export default function ManajemenUser() {
                       <div className="flex items-center gap-2 text-gray-600">
                         <Mail size={16} />
 
-                        <span>{user.email}</span>
+                        <span>
+                          {user.email}
+                        </span>
                       </div>
                     </td>
 
@@ -193,6 +247,22 @@ export default function ManajemenUser() {
 
                         {user.role}
                       </span>
+                    </td>
+
+                    {/* ACTION */}
+                    <td className="px-6 py-5 text-center">
+                      <button
+                        onClick={() =>
+                          handleDelete(
+                            user.id
+                          )
+                        }
+                        className="inline-flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-sm font-semibold text-red-500 transition hover:bg-red-100"
+                      >
+                        <Trash2 size={16} />
+
+                        Hapus
+                      </button>
                     </td>
                   </tr>
                 ))

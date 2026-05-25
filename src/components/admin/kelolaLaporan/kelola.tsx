@@ -25,11 +25,12 @@ interface Laporan {
   user_id: number;
   user_name: string;
   category_name: string;
+  tanggapan?: string;
 }
 
 function getGambarItems(
   gambar: string | string[] | null
-) {
+): string[] {
   if (!gambar) return [];
 
   if (Array.isArray(gambar)) {
@@ -59,73 +60,40 @@ const STATUS_CONFIG: Record<
     label: string;
     color: string;
     bg: string;
-    dot: string;
     headerBg: string;
-    tabActive: string;
-    tabInactive: string;
     emptyIcon: string;
-    ringColor: string;
-    countColor: string;
   }
 > = {
   verifikasi: {
     label: "Menunggu Verifikasi",
     color: "text-blue-600",
     bg: "bg-blue-50 border-blue-100",
-    dot: "bg-blue-400",
     headerBg: "from-blue-400 to-blue-500",
-    tabActive:
-      "border-blue-500 text-blue-600",
-    tabInactive:
-      "border-transparent text-gray-400 hover:text-gray-600",
     emptyIcon: "🔍",
-    ringColor: "ring-blue-300",
-    countColor: "text-blue-600",
   },
 
   proses: {
     label: "Sedang Diproses",
     color: "text-amber-600",
     bg: "bg-amber-50 border-amber-100",
-    dot: "bg-amber-400",
     headerBg: "from-amber-400 to-orange-400",
-    tabActive:
-      "border-amber-500 text-amber-600",
-    tabInactive:
-      "border-transparent text-gray-400 hover:text-gray-600",
     emptyIcon: "⚙️",
-    ringColor: "ring-amber-300",
-    countColor: "text-amber-600",
   },
 
   selesai: {
     label: "Selesai",
     color: "text-emerald-600",
     bg: "bg-emerald-50 border-emerald-100",
-    dot: "bg-emerald-400",
     headerBg: "from-emerald-400 to-teal-500",
-    tabActive:
-      "border-emerald-500 text-emerald-600",
-    tabInactive:
-      "border-transparent text-gray-400 hover:text-gray-600",
     emptyIcon: "✅",
-    ringColor: "ring-emerald-300",
-    countColor: "text-emerald-600",
   },
 
   ditolak: {
     label: "Ditolak",
     color: "text-red-600",
     bg: "bg-red-50 border-red-100",
-    dot: "bg-red-400",
     headerBg: "from-red-400 to-rose-500",
-    tabActive:
-      "border-red-500 text-red-600",
-    tabInactive:
-      "border-transparent text-gray-400 hover:text-gray-600",
     emptyIcon: "🚫",
-    ringColor: "ring-red-300",
-    countColor: "text-red-600",
   },
 };
 
@@ -161,8 +129,6 @@ const IconSearch = () => (
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
   >
     <circle cx="11" cy="11" r="8" />
     <path d="m21 21-4.35-4.35" />
@@ -176,8 +142,6 @@ const IconCalendar = () => (
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
   >
     <rect
       width="18"
@@ -185,26 +149,10 @@ const IconCalendar = () => (
       x="3"
       y="4"
       rx="2"
-      ry="2"
     />
-    <line
-      x1="16"
-      x2="16"
-      y1="2"
-      y2="6"
-    />
-    <line
-      x1="8"
-      x2="8"
-      y1="2"
-      y2="6"
-    />
-    <line
-      x1="3"
-      x2="21"
-      y1="10"
-      y2="10"
-    />
+    <line x1="16" x2="16" y1="2" y2="6" />
+    <line x1="8" x2="8" y1="2" y2="6" />
+    <line x1="3" x2="21" y1="10" y2="10" />
   </svg>
 );
 
@@ -215,8 +163,6 @@ const IconPin = () => (
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
   >
     <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" />
     <circle cx="12" cy="10" r="3" />
@@ -230,57 +176,9 @@ const IconUser = () => (
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
   >
     <circle cx="12" cy="8" r="4" />
     <path d="M20 21a8 8 0 1 0-16 0" />
-  </svg>
-);
-
-const IconCheck = () => (
-  <svg
-    className="w-3.5 h-3.5"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-);
-
-const IconBan = () => (
-  <svg
-    className="w-3.5 h-3.5"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="m4.9 4.9 14.2 14.2" />
-  </svg>
-);
-
-const IconRefresh = () => (
-  <svg
-    className="w-4 h-4"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-    <path d="M21 3v5h-5" />
-    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-    <path d="M8 16H3v5" />
   </svg>
 );
 
@@ -316,20 +214,25 @@ const Spinner = ({
 );
 
 // ─────────────────────────────────────────────
-// CONFIRM DIALOG
+// DIALOG TANGGAPAN
 // ─────────────────────────────────────────────
 
-function ConfirmDialog({
+function TanggapanDialog({
   type,
-  onConfirm,
-  onCancel,
   loading,
+  onCancel,
+  onSubmit,
 }: {
   type: "approve" | "reject";
-  onConfirm: () => void;
-  onCancel: () => void;
   loading: boolean;
+  onCancel: () => void;
+  onSubmit: (
+    tanggapan: string
+  ) => void;
 }) {
+  const [tanggapan, setTanggapan] =
+    useState("");
+
   const isApprove = type === "approve";
 
   return (
@@ -339,57 +242,56 @@ function ConfirmDialog({
         onClick={onCancel}
       />
 
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-        <div
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
-            isApprove
-              ? "bg-emerald-50"
-              : "bg-red-50"
-          }`}
-        >
-          {isApprove ? (
-            <IconCheck />
-          ) : (
-            <IconBan />
-          )}
-        </div>
-
-        <h3 className="text-center font-bold text-gray-800">
+      <div className="relative bg-white w-full max-w-lg rounded-3xl shadow-xl p-6">
+        <h2 className="text-xl font-bold text-gray-800">
           {isApprove
-            ? "Terima laporan?"
-            : "Tolak laporan?"}
-        </h3>
+            ? "Terima Laporan"
+            : "Tolak Laporan"}
+        </h2>
 
-        <p className="text-center text-sm text-gray-400 mt-2">
-          {isApprove
-            ? "Laporan akan masuk ke proses penanganan."
-            : "Laporan akan ditandai ditolak."}
+        <p className="text-sm text-gray-400 mt-1">
+          Berikan tanggapan admin
         </p>
 
-        <div className="flex gap-2 mt-6">
+        <textarea
+          value={tanggapan}
+          onChange={(e) =>
+            setTanggapan(e.target.value)
+          }
+          placeholder="Tulis tanggapan..."
+          className="w-full mt-5 min-h-[140px] rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm outline-none focus:ring-2 focus:ring-gray-200 resize-none"
+        />
+
+        <div className="flex gap-3 mt-5">
           <button
             onClick={onCancel}
-            disabled={loading}
-            className="flex-1 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 text-sm font-semibold"
+            className="flex-1 h-11 rounded-2xl bg-gray-100 hover:bg-gray-200 text-sm font-semibold"
           >
             Batal
           </button>
 
           <button
-            onClick={onConfirm}
-            disabled={loading}
-            className={`flex-1 h-10 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 ${
+            disabled={
+              loading ||
+              !tanggapan.trim()
+            }
+            onClick={() =>
+              onSubmit(tanggapan)
+            }
+            className={`flex-1 h-11 rounded-2xl text-white text-sm font-semibold ${
               isApprove
                 ? "bg-emerald-500 hover:bg-emerald-600"
                 : "bg-red-500 hover:bg-red-600"
-            }`}
+            } disabled:opacity-50`}
           >
             {loading ? (
-              <Spinner size="sm" />
+              <div className="flex justify-center">
+                <Spinner size="sm" />
+              </div>
             ) : isApprove ? (
-              "Ya, Terima"
+              "Terima"
             ) : (
-              "Ya, Tolak"
+              "Tolak"
             )}
           </button>
         </div>
@@ -409,7 +311,8 @@ function LaporanRow({
   laporan: Laporan;
   onStatusChange: (
     id: number,
-    status: StatusDB
+    status: StatusDB,
+    tanggapan?: string
   ) => Promise<void>;
 }) {
   const cfg = STATUS_CONFIG[laporan.status];
@@ -418,25 +321,28 @@ function LaporanRow({
     laporan.gambar
   );
 
-  const [confirm, setConfirm] = useState<
-    "approve" | "reject" | null
-  >(null);
+  const [dialog, setDialog] =
+    useState<
+      "approve" | "reject" | null
+    >(null);
 
   const [loading, setLoading] =
     useState(false);
 
-  const handleAction = async (
-    status: StatusDB
+  const handleSubmit = async (
+    status: StatusDB,
+    tanggapan: string
   ) => {
     try {
       setLoading(true);
 
       await onStatusChange(
         laporan.id,
-        status
+        status,
+        tanggapan
       );
 
-      setConfirm(null);
+      setDialog(null);
     } catch (error) {
       console.log(error);
     } finally {
@@ -446,7 +352,7 @@ function LaporanRow({
 
   return (
     <>
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
         <div
           className={`h-1 bg-gradient-to-r ${cfg.headerBg}`}
         />
@@ -476,7 +382,7 @@ function LaporanRow({
             </span>
           </div>
 
-          <div className="flex gap-4 flex-col md:flex-row">
+          <div className="flex flex-col md:flex-row gap-4">
             {/* GAMBAR */}
             {gambarItems.length > 0 && (
               <div className="grid grid-cols-2 gap-2 w-full md:w-[220px]">
@@ -489,7 +395,7 @@ function LaporanRow({
                     >
                       <img
                         src={img}
-                        alt="gambar"
+                        alt={`gambar-${index}`}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -499,7 +405,7 @@ function LaporanRow({
 
             {/* CONTENT */}
             <div className="flex-1">
-              <h2 className="font-bold text-lg text-gray-800 leading-snug">
+              <h2 className="font-bold text-lg text-gray-800">
                 {laporan.judul_laporan}
               </h2>
 
@@ -521,9 +427,31 @@ function LaporanRow({
 
                 <span className="flex items-center gap-1">
                   <IconCalendar />
-                  {laporan.tanggal_kejadian}
+                  {new Date(
+                    laporan.tanggal_kejadian
+                  ).toLocaleDateString(
+                    "id-ID",
+                    {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    }
+                  )}
                 </span>
               </div>
+
+              {/* TANGGAPAN */}
+              {laporan.tanggapan && (
+                <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50 p-4">
+                  <p className="text-xs font-bold text-orange-700 mb-1">
+                    Tanggapan Admin
+                  </p>
+
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    {laporan.tanggapan}
+                  </p>
+                </div>
+              )}
 
               {/* ACTION */}
               <div className="flex flex-wrap gap-2 mt-5">
@@ -532,57 +460,45 @@ function LaporanRow({
                   <>
                     <button
                       onClick={() =>
-                        setConfirm("approve")
+                        setDialog("approve")
                       }
                       className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold"
                     >
-                      Terima
+                      Terima + Tanggapan
                     </button>
 
                     <button
                       onClick={() =>
-                        setConfirm("reject")
+                        setDialog("reject")
                       }
                       className="h-10 px-4 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold"
                     >
-                      Tolak
+                      Tolak + Tanggapan
                     </button>
                   </>
                 )}
 
                 {laporan.status ===
                   "proses" && (
-                  <>
-                    <button
-                      disabled={loading}
-                      onClick={() =>
-                        handleAction(
-                          "selesai"
-                        )
-                      }
-                      className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold"
-                    >
-                      {loading
-                        ? "Loading..."
-                        : "Selesaikan"}
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        setConfirm("reject")
-                      }
-                      className="h-10 px-4 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold"
-                    >
-                      Tolak
-                    </button>
-                  </>
+                  <button
+                    onClick={() =>
+                      handleSubmit(
+                        "selesai",
+                        laporan.tanggapan ||
+                          "Laporan selesai ditangani."
+                      )
+                    }
+                    className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold"
+                  >
+                    Selesaikan
+                  </button>
                 )}
 
                 {(laporan.status ===
                   "selesai" ||
                   laporan.status ===
                     "ditolak") && (
-                  <span className="text-xs text-gray-400 italic">
+                  <span className="text-xs italic text-gray-400">
                     Tidak ada tindakan
                   </span>
                 )}
@@ -592,18 +508,20 @@ function LaporanRow({
         </div>
       </div>
 
-      {confirm && (
-        <ConfirmDialog
-          type={confirm}
+      {/* DIALOG */}
+      {dialog && (
+        <TanggapanDialog
+          type={dialog}
           loading={loading}
           onCancel={() =>
-            setConfirm(null)
+            setDialog(null)
           }
-          onConfirm={() =>
-            handleAction(
-              confirm === "approve"
+          onSubmit={(tanggapan) =>
+            handleSubmit(
+              dialog === "approve"
                 ? "proses"
-                : "ditolak"
+                : "ditolak",
+              tanggapan
             )
           }
         />
@@ -688,32 +606,21 @@ export default function KelolaLaporan() {
     useCallback(
       async (
         id: number,
-        status: StatusDB
+        status: StatusDB,
+        tanggapan?: string
       ) => {
         try {
-          setData((prev) =>
-            prev.map((item) =>
-              item.id === id
-                ? {
-                    ...item,
-                    status,
-                  }
-                : item
-            )
-          );
-
           await api.patch(
             `/laporan/${id}/status`,
             {
               status,
+              tanggapan,
             }
           );
 
           await fetchLaporan();
         } catch (error) {
           console.log(error);
-
-          await fetchLaporan();
         }
       },
       [fetchLaporan]
@@ -727,10 +634,10 @@ export default function KelolaLaporan() {
       return (
         item.status === activeTab &&
         (item.judul_laporan
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchValue) ||
           item.user_name
-            .toLowerCase()
+            ?.toLowerCase()
             .includes(searchValue) ||
           String(item.id).includes(
             searchValue
@@ -763,31 +670,20 @@ export default function KelolaLaporan() {
               </p>
             </div>
 
-            <div className="flex gap-2">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300">
-                  <IconSearch />
-                </span>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300">
+                <IconSearch />
+              </span>
 
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
-                  }
-                  placeholder="Cari laporan..."
-                  className="h-11 pl-10 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-gray-200"
-                />
-              </div>
-
-              <button
-                onClick={fetchLaporan}
-                className="h-11 w-11 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 flex items-center justify-center"
-              >
-                <IconRefresh />
-              </button>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+                placeholder="Cari laporan..."
+                className="h-11 pl-10 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-gray-200"
+              />
             </div>
           </div>
 
