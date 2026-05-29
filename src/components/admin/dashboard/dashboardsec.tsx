@@ -390,51 +390,39 @@ export default function AdminDashboard() {
       </div>
 
       {/* CHART */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-          <p className="text-sm font-bold text-gray-700 mb-4">
-            Distribusi Status
-          </p>
+        <div className="grid grid-cols-2 gap-4">
 
-          <DonutChart
-            verifikasi={verifikasi}
-            proses={proses}
-            selesai={selesai}
-            ditolak={ditolak}
-          />
-        </div>
-
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-          <p className="text-sm font-bold text-gray-700 mb-4">
-            Laporan per Kategori
-          </p>
-
-          <KategoriBar data={kategoriData} />
-        </div>
-
-        <div className="bg-gradient-to-br bg-[#FE7951] rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-          <div>
-            <p className="text-white/70 text-xs font-semibold uppercase tracking-wide">
-              Butuh Perhatian
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+            <p className="text-sm font-bold text-gray-700 mb-4">
+              Laporan per Kategori
             </p>
 
-            <h3 className="text-white font-extrabold text-2xl mt-2">
-              {verifikasi}
-            </h3>
-
-            <p className="text-white/80 text-sm mt-1">
-              Laporan menunggu verifikasi admin
-            </p>
+            <KategoriBar data={kategoriData} />
           </div>
 
-          <a
-            href="/admin/kelola-laporan"
-            className="mt-5 inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 transition text-white text-sm font-semibold px-4 h-9 rounded-xl"
-          >
-            Kelola Sekarang <ArrowRight size={14} />
-          </a>
+          <div className="bg-gradient-to-br bg-[#FE7951] rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+            <div>
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-wide">
+                Butuh Perhatian
+              </p>
+
+              <h3 className="text-white font-extrabold text-2xl mt-2">
+                {verifikasi}
+              </h3>
+
+              <p className="text-white/80 text-sm mt-1">
+                Laporan menunggu verifikasi admin
+              </p>
+            </div>
+
+            <a
+              href="/admin/kelola-laporan"
+              className="mt-5 inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 transition text-white text-sm font-semibold px-4 h-9 rounded-xl"
+            >
+              Kelola Sekarang <ArrowRight size={14} />
+            </a>
+          </div>
         </div>
-      </div>
 
       {/* TABLE */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">

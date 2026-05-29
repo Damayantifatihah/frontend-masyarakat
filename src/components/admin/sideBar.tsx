@@ -10,7 +10,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-import { logout } from "@/lib/auth";;
+import { logout } from "@/auth";;
 
 const menus = [
   {

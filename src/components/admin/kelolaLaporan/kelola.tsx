@@ -259,7 +259,7 @@ function TanggapanDialog({
             setTanggapan(e.target.value)
           }
           placeholder="Tulis tanggapan..."
-          className="w-full mt-5 min-h-[140px] rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm outline-none focus:ring-2 focus:ring-gray-200 resize-none"
+          className="w-full mt-5 min-h-[140px] rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm outline-none text-gray-800 focus:ring-2 focus:ring-gray-200 resize-none"
         />
 
         <div className="flex gap-3 mt-5">

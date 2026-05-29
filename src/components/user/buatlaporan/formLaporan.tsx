@@ -14,6 +14,28 @@ interface Category {
 }
 
 // ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+
+const inputClass =
+  "w-full h-11 rounded-xl border-[1.5px] border-gray-200 px-[14px] text-sm text-gray-900 outline-none font-[inherit] bg-white focus:border-[#B45743] transition-colors duration-150";
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-[13px] font-bold text-gray-700">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────
 
@@ -148,12 +170,8 @@ export default function FormLaporan() {
 
         {/* HEADER */}
         <div className="bg-[#B45743] px-7 py-[22px]">
-          <p className="text-xs text-white/75 font-medium mb-1">
-            Buat Laporan Baru
-          </p>
-          <h1 className="text-xl font-extrabold text-white">
-            Sampaikan Laporan Anda
-          </h1>
+          <p className="text-xs text-white/75 font-medium mb-1">Buat Laporan Baru</p>
+          <h1 className="text-xl font-extrabold text-white">Sampaikan Laporan Anda</h1>
         </div>
 
         {/* BODY */}
@@ -180,7 +198,7 @@ export default function FormLaporan() {
           )}
 
           {/* JUDUL */}
-          <Field label="Judul Laporan" icon="📋">
+          <Field label="Judul Laporan">
             <input
               type="text"
               value={judul}
@@ -191,7 +209,7 @@ export default function FormLaporan() {
           </Field>
 
           {/* KATEGORI */}
-          <Field label="Kategori" icon="🏷️">
+          <Field label="Kategori">
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
                 <button
@@ -201,7 +219,7 @@ export default function FormLaporan() {
                   className={`h-[34px] px-4 rounded-full text-[13px] font-semibold cursor-pointer transition-all duration-150 font-[inherit] border-[1.5px] ${
                     selectedCategoryId === cat.id
                       ? "border-[#B45743] bg-[#F9EAE7] text-[#8B3A2A]"
-                      : "border-gray-200 bg-white text-gray-500"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
                   }`}
                 >
                   {cat.name}
@@ -212,7 +230,7 @@ export default function FormLaporan() {
 
           {/* LOKASI + TANGGAL — 2 kolom */}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Lokasi Kejadian" icon="📍">
+            <Field label="Lokasi Kejadian">
               <textarea
                 rows={3}
                 value={lokasi}
@@ -221,7 +239,7 @@ export default function FormLaporan() {
                 className={`${inputClass} !h-auto py-[10px] resize-none leading-relaxed`}
               />
             </Field>
-            <Field label="Tanggal Kejadian" icon="📅">
+            <Field label="Tanggal Kejadian">
               <input
                 type="date"
                 value={tanggalKejadian}
@@ -232,7 +250,7 @@ export default function FormLaporan() {
           </div>
 
           {/* DESKRIPSI */}
-          <Field label="Deskripsi Lengkap" icon="📝">
+          <Field label="Deskripsi Lengkap">
             <textarea
               rows={4}
               value={deskripsi}
@@ -243,7 +261,7 @@ export default function FormLaporan() {
           </Field>
 
           {/* FOTO */}
-          <Field label="Lampiran Foto" icon="🖼️">
+          <Field label="Lampiran Foto">
             <p className="text-xs text-gray-400 -mt-1">
               Maksimal 3 foto · JPG atau PNG · Ukuran maks 5MB per foto
             </p>
@@ -257,11 +275,11 @@ export default function FormLaporan() {
               className="hidden"
             />
 
-            <div className="flex flex-wrap gap-3 mt-2">
+            <div className="flex flex-wrap gap-3 mt-1">
               {previewImages.length < 3 && (
                 <div
                   onClick={handleOpenFile}
-                  className="w-[100px] h-[100px] rounded-[14px] border-2 border-dashed border-[#B45743] bg-[#F9EAE7] flex flex-col items-center justify-center cursor-pointer gap-1"
+                  className="w-[100px] h-[100px] rounded-[14px] border-2 border-dashed border-[#B45743] bg-[#F9EAE7] flex flex-col items-center justify-center cursor-pointer gap-1 hover:bg-[#F4DDD8] transition-colors duration-150"
                 >
                   <span className="text-2xl text-[#B45743] leading-none">+</span>
                   <span className="text-xs text-[#8B3A2A] font-semibold">Tambah</span>
@@ -296,22 +314,12 @@ export default function FormLaporan() {
               onClick={handleSubmit}
               disabled={loading}
               className={`h-11 px-7 rounded-xl text-white text-sm font-extrabold border-none font-[inherit] flex items-center gap-2 transition-colors duration-150 ${
-                loading ? "bg-[#C97A68] cursor-not-allowed" : "bg-[#B45743] cursor-pointer"
+                loading ? "bg-[#C97A68] cursor-not-allowed" : "bg-[#B45743] cursor-pointer hover:bg-[#9E3D2C]"
               }`}
             >
               {loading ? (
                 <>
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="animate-spin"
-                  >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
                     <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                   </svg>
                   Mengirim...
@@ -329,33 +337,6 @@ export default function FormLaporan() {
 
         </div>
       </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
-
-const inputClass =
-  "w-full h-11 rounded-xl border-[1.5px] border-gray-200 px-[14px] text-sm text-gray-900 outline-none font-[inherit] bg-white";
-
-function Field({
-  label,
-  icon,
-  children,
-}: {
-  label: string;
-  icon: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="text-[13px] font-bold text-gray-700 flex items-center gap-[6px]">
-        <span className="text-[15px]">{icon}</span>
-        {label}
-      </label>
-      {children}
     </div>
   );
 }

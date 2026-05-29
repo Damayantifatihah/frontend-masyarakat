@@ -265,7 +265,7 @@ export default function ManajemenUser() {
                       </button>
                     </td>
                   </tr>
-                ))
+                )) 
               )}
             </tbody>
           </table>

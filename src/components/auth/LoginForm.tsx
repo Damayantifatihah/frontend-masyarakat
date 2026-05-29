@@ -5,24 +5,40 @@ import {
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+} from "next/navigation";
 
 import Image from "next/image";
+
 import Link from "next/link";
 
-import api from "@/lib/axios";
+import {
+  signIn,
+  useSession,
+} from "next-auth/react";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const {
+    data: session,
+    status,
+  } = useSession();
+
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
 
   const [email, setEmail] =
     useState("");
 
-  const [password, setPassword] =
-    useState("");
+  const [
+    password,
+    setPassword,
+  ] = useState("");
 
   const [loading, setLoading] =
     useState(false);
@@ -30,20 +46,17 @@ export default function LoginPage() {
   // ===================================
   // AUTO REDIRECT JIKA SUDAH LOGIN
   // ===================================
+
   useEffect(() => {
-    const token =
-      localStorage.getItem("token");
+    if (
+      status ===
+      "authenticated"
+    ) {
+      const role =
+        session?.user?.role;
 
-    const user =
-      localStorage.getItem("user");
-
-    if (token && user) {
-      const parsedUser =
-        JSON.parse(user);
-
-      if (
-        parsedUser.role === "admin"
-      ) {
+      // ADMIN
+      if (role === "admin") {
         router.replace(
           "/admin/dashboard"
         );
@@ -51,8 +64,9 @@ export default function LoginPage() {
         return;
       }
 
+      // SUPERADMIN
       if (
-        parsedUser.role ===
+        role ===
         "superadmin"
       ) {
         router.replace(
@@ -62,13 +76,19 @@ export default function LoginPage() {
         return;
       }
 
+      // USER
       router.replace("/user");
     }
-  }, [router]);
+  }, [
+    session,
+    status,
+    router,
+  ]);
 
   // ===================================
   // HANDLE LOGIN
   // ===================================
+
   const handleLogin = async (
     e: React.FormEvent
   ) => {
@@ -77,73 +97,53 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const res = await api.post(
-        "/auth/login",
-        {
-          email,
-          password,
-        }
-      );
+      const result =
+        await signIn(
+          "credentials",
+          {
+            email,
+            password,
 
-      console.log(res.data);
+            redirect: false,
+          }
+        );
 
-      // =========================
-      // AMBIL DATA
-      // =========================
-      const token =
-        res.data?.token;
-
-      const user =
-        res.data?.user;
-
-      // =========================
-      // VALIDASI
-      // =========================
-      if (!token || !user) {
+      // LOGIN GAGAL
+      if (result?.error) {
         alert(
-          "Data login tidak valid"
+          "Email atau password salah"
         );
 
         return;
       }
 
-      // =========================
-      // SIMPAN TOKEN
-      // =========================
-      localStorage.setItem(
-        "token",
-        token
+      // AMBIL SESSION
+      const res = await fetch(
+        "/api/auth/session"
       );
 
-      // =========================
-      // SIMPAN USER
-      // =========================
-      localStorage.setItem(
-        "user",
-        JSON.stringify(user)
-      );
+      const session =
+        await res.json();
 
-      // =========================
-      // SIMPAN COOKIE
-      // =========================
-     document.cookie = `token=${token}; path=/`;
-    document.cookie = `role=${user.role}; path=/`;
+      const role =
+        session?.user?.role;
 
       // =========================
       // REDIRECT ROLE
       // =========================
-      if (
-        user.role === "admin"
-      ) {
+
+      // ADMIN
+      if (role === "admin") {
         router.replace(
-          "/admin"
+          "/admin/dashboard"
         );
 
         return;
       }
 
+      // SUPERADMIN
       if (
-        user.role ===
+        role ===
         "superadmin"
       ) {
         router.replace(
@@ -153,16 +153,12 @@ export default function LoginPage() {
         return;
       }
 
-      // default user
+      // USER
       router.replace("/user");
-    } catch (error: any) {
+    } catch (error) {
       console.log(error);
 
-      alert(
-        error.response?.data
-          ?.message ||
-          "Login gagal"
-      );
+      alert("Login gagal");
     } finally {
       setLoading(false);
     }
@@ -172,7 +168,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex items-center justify-center overflow-hidden font-[Poppins,sans-serif]">
       <div className="relative w-full h-screen flex">
         
-        {/* Background */}
+        {/* BACKGROUND */}
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/bg.png"
@@ -217,7 +213,7 @@ export default function LoginPage() {
         <div className="relative z-10 w-full lg:w-1/2 flex items-center justify-center px-6">
           <div className="w-full max-w-[420px]">
             
-            {/* Heading */}
+            {/* HEADING */}
             <div className="mb-8 text-center">
               <h1 className="text-[36px] font-extrabold text-white mb-1 drop-shadow">
                 Selamat Datang!
@@ -315,10 +311,6 @@ export default function LoginPage() {
                   : "Masuk"}
               </button>
             </form>
-
-            
-
-           
 
             {/* REGISTER */}
             <p className="text-center text-[13px] text-white/70 mt-7">

@@ -1,9 +1,18 @@
-import WelcomeSection from "@/components/user/dashboard/welcomeSection";
+import DashboardSection from "@/components/user/dashboard/dashboardSection";
+import LaporanFeed from "@/components/user/dashboard/laporanFeed";
 
-export default function UserDashboard() {
+export default function DashboardPage() {
   return (
-    <div className="p-8">
-      <WelcomeSection />
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "24px",
+      }}
+    >
+      <DashboardSection />
+
+      <LaporanFeed />
     </div>
   );
 }

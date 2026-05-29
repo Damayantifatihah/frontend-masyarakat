@@ -2,10 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { getUser } from "@/lib/auth";
+import {
+  useSession,
+} from "next-auth/react";
 import api from "@/lib/axios";
 
 export default function ProfilePage() {
+  const {
+  data: session,
+  update,
+} = useSession();
+
   const [isEditing, setIsEditing] =
     useState(false);
 
@@ -44,39 +51,36 @@ export default function ProfilePage() {
   // ==============================
   // LOAD USER
   // ==============================
-  useEffect(() => {
-    const currentUser = getUser();
+useEffect(() => {
+  if (session?.user) {
+    const savedBio =
+      localStorage.getItem(
+        `bio_${session.user.email}`
+      ) ||
+      "Aktif melaporkan permasalahan lingkungan dan fasilitas umum.";
 
-    if (currentUser) {
-      const savedBio =
-        currentUser.bio ||
-        "Aktif melaporkan permasalahan lingkungan dan fasilitas umum.";
+    setUser({
+      ...session.user,
+      bio: savedBio,
+    });
 
-      const userData = {
-        ...currentUser,
-        bio: savedBio,
-      };
+    setForm({
+      email:
+        session.user.email || "",
+      password: "",
+      bio: savedBio,
+    });
 
-      setUser(userData);
+    const savedPhoto =
+      localStorage.getItem(
+        `profilePhoto_${session.user.email}`
+      );
 
-      setForm({
-        email:
-          currentUser.email || "",
-        password: "",
-        bio: savedBio,
-      });
-
-      // LOAD FOTO
-      const savedPhoto =
-        localStorage.getItem(
-          `profilePhoto_${currentUser.email}`
-        );
-
-      if (savedPhoto) {
-        setPhoto(savedPhoto);
-      }
+    if (savedPhoto) {
+      setPhoto(savedPhoto);
     }
-  }, []);
+  }
+}, [session]);
 
   // ==============================
   // HANDLE INPUT
@@ -178,7 +182,7 @@ export default function ProfilePage() {
 
     setPhoto(imageData);
 
-    const currentUser = getUser();
+    const currentUser = session?.user;
 
     if (currentUser?.email) {
       localStorage.setItem(
@@ -199,7 +203,7 @@ export default function ProfilePage() {
   // REMOVE PHOTO
   // ==============================
   const removePhoto = () => {
-    const currentUser = getUser();
+    const currentUser = session?.user;
 
     if (!currentUser?.email)
       return;
@@ -244,90 +248,107 @@ export default function ProfilePage() {
   // ==============================
   // SAVE PROFILE
   // ==============================
-  const handleSave = async () => {
-    try {
-      setLoading(true);
+const handleSave = async () => {
+  try {
+    setLoading(true);
 
-      const res = await api.put(
-        "/auth/profile",
-        {
-          email: form.email,
-          password: form.password,
-          bio: form.bio,
-        }
-      );
-
-      // USER BARU
-      const updatedUser = {
-        ...user,
-        ...res.data.user,
+    const res = await api.put(
+      "/auth/profile",
+      {
+        email: form.email,
+        password: form.password,
         bio: form.bio,
-      };
+      }
+    );
 
-      // UPDATE LOCAL STORAGE
+    const updatedUser = {
+      ...user,
+      ...res.data.user,
+      bio: form.bio,
+    };
+
+    // =========================
+    // SAVE BIO
+    // =========================
+    localStorage.setItem(
+      `bio_${updatedUser.email}`,
+      form.bio
+    );
+
+    // pindahin bio lama kalau email berubah
+    if (
+      user.email !== updatedUser.email
+    ) {
+      localStorage.removeItem(
+        `bio_${user.email}`
+      );
+    }
+
+    // =========================
+    // SAVE PHOTO
+    // =========================
+    if (photo) {
       localStorage.setItem(
-        "user",
-        JSON.stringify(
-          updatedUser
-        )
+        `profilePhoto_${updatedUser.email}`,
+        photo
       );
 
-      // HANDLE FOTO
       if (
         user.email !==
-          updatedUser.email &&
-        photo
+        updatedUser.email
       ) {
-        localStorage.setItem(
-          `profilePhoto_${updatedUser.email}`,
-          photo
-        );
-
         localStorage.removeItem(
           `profilePhoto_${user.email}`
         );
       }
-
-      // UPDATE STATE
-      setUser(updatedUser);
-
-      setForm({
-        email:
-          updatedUser.email,
-        password: "",
-        bio:
-          updatedUser.bio ||
-          "",
-      });
-
-      // REALTIME UPDATE
-      window.dispatchEvent(
-        new Event(
-          "profileUpdated"
-        )
-      );
-
-      window.dispatchEvent(
-        new Event("storage")
-      );
-
-      setIsEditing(false);
-
-      alert(
-        "Profil berhasil diperbarui"
-      );
-    } catch (error: any) {
-      console.log(error);
-
-      alert(
-        error?.response?.data
-          ?.message ||
-          "Gagal update profile"
-      );
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // =========================
+    // UPDATE STATE
+    // =========================
+    setUser(updatedUser);
+
+    setForm({
+      email: updatedUser.email,
+      password: "",
+      bio: form.bio,
+    });
+
+    // =========================
+    // UPDATE SESSION
+    // =========================
+    await update({
+      ...session,
+      user: {
+        ...session?.user,
+        email: updatedUser.email,
+      },
+    });
+
+    // =========================
+    // TRIGGER SIDEBAR UPDATE
+    // =========================
+    window.dispatchEvent(
+      new Event("profileUpdated")
+    );
+
+    setIsEditing(false);
+
+    alert(
+      "Profil berhasil diperbarui"
+    );
+  } catch (error: any) {
+    console.log(error);
+
+    alert(
+      error?.response?.data
+        ?.message ||
+        "Gagal update profile"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="max-w-3xl p-6">
@@ -442,15 +463,6 @@ export default function ProfilePage() {
                   {user?.name ||
                     "Loading..."}
                 </h2>
-
-                <p
-                  className="
-                  mt-1 text-sm text-gray-400
-                "
-                >
-                  Bergabung sejak
-                  Januari 2024
-                </p>
 
                 <p
                   className="

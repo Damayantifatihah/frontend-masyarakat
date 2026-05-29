@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import Link from "next/link";
+
 import { usePathname } from "next/navigation";
+
 import Image from "next/image";
 
 import {
@@ -12,14 +18,19 @@ import {
   LogOut,
 } from "lucide-react";
 
-import { getUser, logout } from "@/lib/auth";
+import {
+  useSession,
+  signOut,
+} from "next-auth/react";
 
 // ─────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────
 
 const BRAND = "#B45743";
+
 const BRAND_DARK = "#8B3A2A";
+
 const BRAND_LIGHT = "#F9EAE7";
 
 const navItems = [
@@ -28,11 +39,13 @@ const navItems = [
     href: "/user",
     icon: Home,
   },
+
   {
     label: "Buat Laporan",
     href: "/user/buatlaporan",
     icon: BarChart2,
   },
+
   {
     label: "Laporan Saya",
     href: "/user/laporan-saya",
@@ -49,20 +62,27 @@ function buildUserState(base: {
   bio?: string;
   photo?: string | null;
 }) {
-  const name = base.name || "User";
+  const name =
+    base.name || "User";
 
   const initials = name
     .split(" ")
-    .map((w: string) => w[0])
+    .map(
+      (w: string) => w[0]
+    )
     .slice(0, 2)
     .join("")
     .toUpperCase();
 
   return {
     name,
+
     bio: base.bio || "",
+
     initials,
-    photo: base.photo || null,
+
+    photo:
+      base.photo || null,
   };
 }
 
@@ -71,79 +91,67 @@ function buildUserState(base: {
 // ─────────────────────────────────────────────
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const pathname =
+    usePathname();
+
+  const {
+    data: session,
+  } = useSession();
 
   const [hovered, setHovered] =
-    useState<string | null>(null);
+    useState<string | null>(
+      null
+    );
 
   const [scrolled, setScrolled] =
     useState(false);
 
-  const [user, setUser] = useState({
-    name: "User",
-    bio: "",
-    initials: "U",
-    photo: null as string | null,
-  });
+  const [bio, setBio] =
+    useState("");
 
-  // ─────────────────────────────
-  // LOAD USER
-  // ─────────────────────────────
-
-  const loadUser = () => {
-    const currentUser = getUser();
-
-    if (!currentUser) return;
-
-    // FOTO TERBARU
-    const savedPhoto = localStorage.getItem(
-      `profilePhoto_${currentUser.email}`
+  const [photo, setPhoto] =
+    useState<string | null>(
+      null
     );
 
-    // UPDATE STATE
-    setUser(
-      buildUserState({
-        name: currentUser.name,
-        bio: currentUser.bio,
-        photo: savedPhoto,
-      })
-    );
+  // ─────────────────────────────
+  // LOAD BIO + PHOTO
+  // ─────────────────────────────
+
+ useEffect(() => {
+  if (!session?.user?.email)
+    return;
+
+  const loadProfile = () => {
+    const savedBio =
+      localStorage.getItem(
+        `bio_${session.user.email}`
+      ) || "";
+
+    const savedPhoto =
+      localStorage.getItem(
+        `profilePhoto_${session.user.email}`
+      );
+
+    setBio(savedBio);
+
+    setPhoto(savedPhoto);
   };
 
-  // ─────────────────────────────
-  // LOAD + REALTIME UPDATE
-  // ─────────────────────────────
+  loadProfile();
 
-  useEffect(() => {
-    loadUser();
+  window.addEventListener(
+    "profileUpdated",
+    loadProfile
+  );
 
-    const handler = () => {
-      loadUser();
-    };
-
-    // REALTIME UPDATE
-    window.addEventListener(
-      "storage",
-      handler
-    );
-
-    window.addEventListener(
+  return () => {
+    window.removeEventListener(
       "profileUpdated",
-      handler
+      loadProfile
     );
-
-    return () => {
-      window.removeEventListener(
-        "storage",
-        handler
-      );
-
-      window.removeEventListener(
-        "profileUpdated",
-        handler
-      );
-    };
-  }, []);
+  };
+}, [session]);
 
   // ─────────────────────────────
   // SCROLL EFFECT
@@ -151,7 +159,9 @@ export default function Sidebar() {
 
   useEffect(() => {
     const onScroll = () => {
-      setScrolled(window.scrollY > 40);
+      setScrolled(
+        window.scrollY > 40
+      );
     };
 
     window.addEventListener(
@@ -169,29 +179,37 @@ export default function Sidebar() {
       );
   }, []);
 
+  // ─────────────────────────────
+  // USER
+  // ─────────────────────────────
+
+  const user =
+    buildUserState({
+      name:
+        session?.user?.name ||
+        "User",
+
+      bio,
+
+      photo,
+    });
+
   return (
     <aside
       style={{
         width: "264px",
         minHeight: "100vh",
-
         backgroundColor: "#ffffff",
-
         borderRight:
           "1px solid #F0EFEF",
-
         display: "flex",
         flexDirection: "column",
-
         fontFamily:
           "'Plus Jakarta Sans', 'Segoe UI', sans-serif",
-
-        transition: "all 0.35s ease",
-
+        transition:
+          "all 0.35s ease",
         position: "relative",
-
         flexShrink: 0,
-
         overflow: "hidden",
 
         boxShadow: scrolled
@@ -199,7 +217,7 @@ export default function Sidebar() {
           : "none",
       }}
     >
-      {/* ───────────────── LOGO ───────────────── */}
+      {/* LOGO */}
       <div
         style={{
           padding: scrolled
@@ -216,95 +234,57 @@ export default function Sidebar() {
           minHeight: scrolled
             ? "64px"
             : "78px",
-
-          overflow: "hidden",
-
-          transition:
-            "padding 0.35s cubic-bezier(.4,0,.2,1), min-height 0.35s cubic-bezier(.4,0,.2,1)",
         }}
       >
-        <div
-          style={{
-            overflow: "hidden",
-
-            transition:
-              "height 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s",
-
-            height: scrolled
-              ? "30px"
-              : "38px",
-
-            opacity: scrolled
-              ? 0.88
-              : 1,
-          }}
-        >
-          <Image
-            src="/images/logo.png"
-            alt="LaporinAja"
-            width={150}
-            height={38}
-            style={{
-              objectFit: "contain",
-
-              objectPosition:
-                "left center",
-
-              width: scrolled
-                ? "126px"
-                : "150px",
-
-              height: scrolled
-                ? "30px"
-                : "38px",
-
-              transition:
-                "width 0.35s cubic-bezier(.4,0,.2,1), height 0.35s cubic-bezier(.4,0,.2,1)",
-            }}
-          />
-        </div>
+        <Image
+          src="/images/logo.png"
+          alt="LaporinAja"
+          width={150}
+          height={38}
+        />
       </div>
 
-      {/* ───────────────── PROFILE ───────────────── */}
+      {/* PROFILE */}
       <div
         style={{
-          padding: "16px 16px 12px",
-
-          transition: "padding 0.25s",
+          padding:
+            "16px 16px 12px",
         }}
       >
         <Link
           href="/user/profile"
           style={{
-            textDecoration: "none",
+            textDecoration:
+              "none",
           }}
         >
           <div
             style={{
               backgroundColor:
-                hovered === "profile"
+                hovered ===
+                "profile"
                   ? BRAND_DARK
                   : BRAND,
 
-              borderRadius: "14px",
+              borderRadius:
+                "14px",
 
-              padding: "13px 14px",
+              padding:
+                "13px 14px",
 
               display: "flex",
 
-              alignItems: "center",
+              alignItems:
+                "center",
 
               gap: "12px",
 
               cursor: "pointer",
-
-              transition:
-                "background-color 0.2s ease, transform 0.2s ease",
-
-              overflow: "hidden",
             }}
             onMouseEnter={() =>
-              setHovered("profile")
+              setHovered(
+                "profile"
+              )
             }
             onMouseLeave={() =>
               setHovered(null)
@@ -315,28 +295,20 @@ export default function Sidebar() {
               style={{
                 width: "40px",
                 height: "40px",
-
-                borderRadius: "50%",
-
-                overflow: "hidden",
-
+                borderRadius:
+                  "50%",
+                overflow:
+                  "hidden",
                 backgroundColor:
                   "rgba(255,255,255,0.25)",
-
                 display: "flex",
-
-                alignItems: "center",
-
+                alignItems:
+                  "center",
                 justifyContent:
                   "center",
-
                 fontSize: "14px",
-
                 fontWeight: 700,
-
                 color: "#fff",
-
-                flexShrink: 0,
               }}
             >
               {user.photo ? (
@@ -345,9 +317,10 @@ export default function Sidebar() {
                   alt="Profile"
                   style={{
                     width: "100%",
-                    height: "100%",
-
-                    objectFit: "cover",
+                    height:
+                      "100%",
+                    objectFit:
+                      "cover",
                   }}
                 />
               ) : (
@@ -355,30 +328,21 @@ export default function Sidebar() {
               )}
             </div>
 
-            {/* USER INFO */}
+            {/* USER */}
             <div
               style={{
-                overflow: "hidden",
-
+                overflow:
+                  "hidden",
                 flex: 1,
               }}
             >
               <p
                 style={{
                   margin: 0,
-
-                  fontSize: "14px",
-
+                  fontSize:
+                    "14px",
                   fontWeight: 700,
-
                   color: "#fff",
-
-                  whiteSpace: "nowrap",
-
-                  overflow: "hidden",
-
-                  textOverflow:
-                    "ellipsis",
                 }}
               >
                 {user.name}
@@ -387,48 +351,26 @@ export default function Sidebar() {
               {user.bio && (
                 <p
                   style={{
-                    margin: "3px 0 0",
-
-                    fontSize: "11px",
-
+                    margin:
+                      "3px 0 0",
+                    fontSize:
+                      "11px",
                     color:
                       "rgba(255,255,255,0.75)",
-
-                    whiteSpace:
-                      "nowrap",
-
-                    overflow: "hidden",
-
-                    textOverflow:
-                      "ellipsis",
                   }}
                 >
                   {user.bio}
                 </p>
               )}
             </div>
-
-            <span
-              style={{
-                color:
-                  "rgba(255,255,255,0.7)",
-
-                fontSize: "18px",
-
-                flexShrink: 0,
-              }}
-            >
-              ›
-            </span>
           </div>
         </Link>
       </div>
 
-      {/* ───────────────── NAVIGATION ───────────────── */}
+      {/* NAVIGATION */}
       <nav
         style={{
           padding: "8px 12px",
-
           flex: 1,
         }}
       >
@@ -441,9 +383,6 @@ export default function Sidebar() {
             const isActive =
               pathname === href;
 
-            const isHov =
-              hovered === href;
-
             return (
               <button
                 key={href}
@@ -451,48 +390,26 @@ export default function Sidebar() {
                   (window.location.href =
                     href)
                 }
-                onMouseEnter={() =>
-                  setHovered(href)
-                }
-                onMouseLeave={() =>
-                  setHovered(null)
-                }
                 style={{
                   display: "flex",
-
-                  alignItems: "center",
-
+                  alignItems:
+                    "center",
                   gap: "12px",
-
-                  padding: "11px 14px",
-
-                  borderRadius: "10px",
-
-                  marginBottom: "4px",
-
+                  padding:
+                    "11px 14px",
+                  borderRadius:
+                    "10px",
+                  marginBottom:
+                    "4px",
                   width: "100%",
-
                   border: "none",
 
                   backgroundColor:
                     isActive
                       ? BRAND
-                      : isHov
-                      ? BRAND_LIGHT
                       : "transparent",
 
-                  borderLeft: isActive
-                    ? `3px solid ${BRAND_DARK}`
-                    : "3px solid transparent",
-
-                  transition:
-                    "all 0.2s ease",
-
                   cursor: "pointer",
-
-                  textAlign: "left",
-
-                  overflow: "hidden",
                 }}
               >
                 <Icon
@@ -500,32 +417,16 @@ export default function Sidebar() {
                   color={
                     isActive
                       ? "#fff"
-                      : isHov
-                      ? BRAND
                       : "#6B7280"
                   }
-                  style={{
-                    flexShrink: 0,
-                  }}
                 />
 
                 <span
                   style={{
-                    fontSize: "14px",
-
-                    fontWeight:
+                    color:
                       isActive
-                        ? 700
-                        : 500,
-
-                    color: isActive
-                      ? "#fff"
-                      : isHov
-                      ? BRAND
-                      : "#374151",
-
-                    whiteSpace:
-                      "nowrap",
+                        ? "#fff"
+                        : "#374151",
                   }}
                 >
                   {label}
@@ -536,87 +437,37 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* ───────────────── LOGOUT ───────────────── */}
+      {/* LOGOUT */}
       <div
         style={{
-          padding: "0 12px 24px",
+          padding:
+            "0 12px 24px",
         }}
       >
-        <div
-          style={{
-            height: "1px",
-
-            backgroundColor:
-              "#F0EFEF",
-
-            marginBottom: "10px",
-          }}
-        />
-
         <button
+          onClick={() =>
+            signOut({
+              callbackUrl:
+                "/auth/login",
+            })
+          }
           style={{
             display: "flex",
-
-            alignItems: "center",
-
+            alignItems:
+              "center",
             gap: "12px",
-
-            padding: "11px 14px",
-
-            borderRadius: "10px",
-
+            padding:
+              "11px 14px",
+            borderRadius:
+              "10px",
             width: "100%",
-
             border: "none",
-
-            backgroundColor:
-              hovered === "logout"
-                ? BRAND_LIGHT
-                : "transparent",
-
             cursor: "pointer",
-
-            transition:
-              "background-color 0.15s",
-
-            overflow: "hidden",
           }}
-          onMouseEnter={() =>
-            setHovered("logout")
-          }
-          onMouseLeave={() =>
-            setHovered(null)
-          }
-          onClick={logout}
         >
-          <LogOut
-            size={20}
-            color={
-              hovered === "logout"
-                ? BRAND
-                : "#6B7280"
-            }
-            style={{
-              flexShrink: 0,
-            }}
-          />
+          <LogOut size={20} />
 
-          <span
-            style={{
-              fontSize: "14px",
-
-              fontWeight: 500,
-
-              color:
-                hovered === "logout"
-                  ? BRAND
-                  : "#6B7280",
-
-              whiteSpace: "nowrap",
-            }}
-          >
-            Keluar
-          </span>
+          <span>Keluar</span>
         </button>
       </div>
     </aside>

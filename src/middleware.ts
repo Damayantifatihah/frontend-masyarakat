@@ -1,74 +1,121 @@
+import { withAuth } from "next-auth/middleware";
+
 import { NextResponse } from "next/server";
 
-import type { NextRequest } from "next/server";
+export default withAuth(
+  function middleware(req: any) {
+    const token =
+      req.nextauth.token;
 
-export function middleware(
-  req: NextRequest
-) {
-  const token =
-    req.cookies.get("token")
-      ?.value;
+    const pathname =
+      req.nextUrl.pathname;
 
-  const role =
-    req.cookies.get("role")
-      ?.value;
+    // =========================
+    // ROUTES
+    // =========================
 
-  const { pathname } =
-    req.nextUrl;
+    const isUserRoute =
+      pathname.startsWith(
+        "/user"
+      );
 
-  // =========================
-  // ROUTES
-  // =========================
+    const isAdminRoute =
+      pathname.startsWith(
+        "/admin"
+      );
 
-  const isUserRoute =
-    pathname.startsWith(
-      "/user"
-    );
+    const isSuperAdminRoute =
+      pathname.startsWith(
+        "/superadmin"
+      );
 
-  const isAdminRoute =
-    pathname.startsWith(
-      "/admin"
-    );
+    const isAuthRoute =
+      pathname.startsWith(
+        "/auth/login"
+      ) ||
+      pathname.startsWith(
+        "/auth/register"
+      );
 
-  const isSuperAdminRoute =
-    pathname.startsWith(
-      "/superadmin"
-    );
+    // =========================
+    // BELUM LOGIN
+    // =========================
 
-  const isAuthRoute =
-    pathname.startsWith(
-      "/auth/login"
-    ) ||
-    pathname.startsWith(
-      "/auth/register"
-    );
+    if (
+      !token &&
+      (isUserRoute ||
+        isAdminRoute ||
+        isSuperAdminRoute)
+    ) {
+      return NextResponse.redirect(
+        new URL(
+          "/auth/login",
+          req.url
+        )
+      );
+    }
 
-  // =========================
-  // BELUM LOGIN
-  // =========================
+    // =========================
+    // SUDAH LOGIN
+    // =========================
 
-  if (
-    !token &&
-    (isUserRoute ||
-      isAdminRoute ||
-      isSuperAdminRoute)
-  ) {
-    return NextResponse.redirect(
-      new URL(
-        "/auth/login",
-        req.url
-      )
-    );
-  }
+    if (token && isAuthRoute) {
+      // SUPERADMIN
+      if (
+        token.role ===
+        "superadmin"
+      ) {
+        return NextResponse.redirect(
+          new URL(
+            "/superadmin/dashboard",
+            req.url
+          )
+        );
+      }
 
-  // =========================
-  // SUDAH LOGIN
-  // =========================
+      // ADMIN
+      if (
+        token.role === "admin"
+      ) {
+        return NextResponse.redirect(
+          new URL(
+            "/admin/dashboard",
+            req.url
+          )
+        );
+      }
 
-  if (token && isAuthRoute) {
-    // redirect sesuai role
+      // USER
+      return NextResponse.redirect(
+        new URL("/user", req.url)
+      );
+    }
 
-    if (role === "admin") {
+    // =========================
+    // USER PROTECTION
+    // =========================
+
+    if (
+      token?.role ===
+        "user" &&
+      (isAdminRoute ||
+        isSuperAdminRoute)
+    ) {
+      return NextResponse.redirect(
+        new URL("/user", req.url)
+      );
+    }
+
+    // =========================
+    // ADMIN PROTECTION
+    // =========================
+
+    if (
+      token?.role ===
+        "admin" &&
+      (isUserRoute ||
+        isSuperAdminRoute)
+    ) {
       return NextResponse.redirect(
         new URL(
           "/admin/dashboard",
@@ -77,8 +124,15 @@ export function middleware(
       );
     }
 
+    // =========================
+    // SUPERADMIN PROTECTION
+    // =========================
+
     if (
-      role === "superadmin"
+      token?.role ===
+        "superadmin" &&
+      (isUserRoute ||
+        isAdminRoute)
     ) {
       return NextResponse.redirect(
         new URL(
@@ -88,63 +142,26 @@ export function middleware(
       );
     }
 
-    return NextResponse.redirect(
-      new URL("/user", req.url)
-    );
+    return NextResponse.next();
+  },
+
+  {
+    callbacks: {
+      authorized: () => true,
+    },
   }
-
-  // =========================
-  // ROLE PROTECTION
-  // =========================
-
-  // USER buka admin
-  if (
-    role === "user" &&
-    (isAdminRoute ||
-      isSuperAdminRoute)
-  ) {
-    return NextResponse.redirect(
-      new URL("/user", req.url)
-    );
-  }
-
-  // ADMIN buka user
-  if (
-    role === "admin" &&
-    (isUserRoute ||
-      isSuperAdminRoute)
-  ) {
-    return NextResponse.redirect(
-      new URL(
-        "/admin",
-        req.url
-      )
-    );
-  }
-
-  // SUPERADMIN buka selain superadmin
-  if (
-    role === "superadmin" &&
-    (isUserRoute ||
-      isAdminRoute)
-  ) {
-    return NextResponse.redirect(
-      new URL(
-        "/superadmin/dashboard",
-        req.url
-      )
-    );
-  }
-
-  return NextResponse.next();
-}
+);
 
 export const config = {
   matcher: [
     "/user/:path*",
+
     "/admin/:path*",
+
     "/superadmin/:path*",
+
     "/auth/login",
+
     "/auth/register",
   ],
 };
