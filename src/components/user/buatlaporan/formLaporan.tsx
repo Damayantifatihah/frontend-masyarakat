@@ -4,6 +4,15 @@ import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import api from "@/lib/axios";
 
+import dynamic from "next/dynamic";
+
+const MapPicker = dynamic(
+  () => import("@/components/MapPicker"),
+  {
+    ssr: false,
+  }
+);
+
 // ─────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────
@@ -87,6 +96,7 @@ export default function FormLaporan() {
     if (!files || files.length === 0) return;
 
     const newFiles = Array.from(files);
+    console.log("FILES DIPILIH:", newFiles);
 
     if (selectedFiles.length + newFiles.length > 3) {
       setErrorMsg("Maksimal upload 3 foto.");
@@ -140,7 +150,13 @@ export default function FormLaporan() {
       formData.append("lokasi", lokasi);
       selectedFiles.forEach((file) => formData.append("gambar", file));
 
-      const res = await api.post("/laporan", formData);
+      console.log("SELECTED FILES:", selectedFiles);
+
+for (const pair of formData.entries()) {
+  console.log(pair[0], pair[1]);
+}
+
+const res = await api.post("/laporan", formData);
       console.log("SUCCESS:", res.data);
 
       setSuccessMsg("Laporan berhasil dikirim!");
@@ -228,26 +244,36 @@ export default function FormLaporan() {
             </div>
           </Field>
 
-          {/* LOKASI + TANGGAL — 2 kolom */}
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Lokasi Kejadian">
-              <textarea
-                rows={3}
-                value={lokasi}
-                onChange={(e) => setLokasi(e.target.value)}
-                placeholder="Masukkan alamat atau deskripsi lokasi kejadian"
-                className={`${inputClass} !h-auto py-[10px] resize-none leading-relaxed`}
-              />
-            </Field>
-            <Field label="Tanggal Kejadian">
-              <input
-                type="date"
-                value={tanggalKejadian}
-                onChange={(e) => setTanggalKejadian(e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-          </div>
+         {/* TANGGAL */}
+<Field label="Tanggal Kejadian">
+  <input
+    type="date"
+    value={tanggalKejadian}
+    onChange={(e) =>
+      setTanggalKejadian(e.target.value)
+    }
+    className={inputClass}
+  />
+</Field>
+
+{/* LOKASI MAP */}
+<Field label="Lokasi Kejadian">
+  <input
+    type="text"
+    value={lokasi}
+    readOnly
+    placeholder="Cari atau klik lokasi pada peta"
+    className={inputClass}
+  />
+
+  <div className="mt-3 overflow-hidden rounded-xl border border-gray-200">
+    <MapPicker
+      onSelectLocation={(alamat) => {
+        setLokasi(alamat);
+      }}
+    />
+  </div>
+</Field>
 
           {/* DESKRIPSI */}
           <Field label="Deskripsi Lengkap">

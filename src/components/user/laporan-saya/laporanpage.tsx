@@ -282,9 +282,13 @@ export default function LaporanSaya() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const data = res.data?.data || [];
+      const data = res.data?.data || [];
+
+console.log("DATA PERTAMA:", data[0]);
 
         const formatted = data.map((item: any) => {
+          console.log("GAMBAR:", item.gambar);
+
           let parsedGambar: string[] = [];
 
           if (Array.isArray(item.gambar)) {
@@ -574,15 +578,14 @@ export default function LaporanSaya() {
                               key={idx}
                               className="aspect-square rounded-xl overflow-hidden border border-[#F0F0F0] bg-gray-100"
                             >
-                              <img
-                                src={img}
-                                alt={`Foto ${idx + 1}`}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src =
-                                    "/images/placeholder.png";
-                                }}
-                              />
+                            <img
+  src={
+    img.startsWith("http")
+      ? img
+      : `http://localhost:5000/uploads/${img}`
+  }
+  alt={`Foto ${idx + 1}`}
+/>
                             </div>
                           ))}
                         </div>

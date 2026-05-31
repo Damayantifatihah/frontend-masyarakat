@@ -11,7 +11,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-import { logout } from "@/auth";
+import { signOut } from "next-auth/react";
 
 const menus = [
   {
@@ -98,7 +98,7 @@ export default function SuperAdminSidebar() {
       {/* LOGOUT */}
       <div className="p-4 border-t border-gray-100">
         <button
-          onClick={logout}
+          onClick={() => signOut()}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-red-50 hover:text-red-500 transition"
         >
           <LogOut size={20} />

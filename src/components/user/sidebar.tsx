@@ -1,472 +1,179 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
+import { useEffect, useState } from "react";
 import Link from "next/link";
-
 import { usePathname } from "next/navigation";
-
 import Image from "next/image";
+import { Home, FileText, BarChart2, LogOut } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
-import {
-  Home,
-  FileText,
-  BarChart2,
-  LogOut,
-} from "lucide-react";
+// ─── Constants ───────────────────────────────────────────────────────────────
 
-import {
-  useSession,
-  signOut,
-} from "next-auth/react";
-
-// ─────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────
-
-const BRAND = "#B45743";
-
-const BRAND_DARK = "#8B3A2A";
-
-const BRAND_LIGHT = "#F9EAE7";
-
-const navItems = [
-  {
-    label: "Beranda",
-    href: "/user",
-    icon: Home,
-  },
-
-  {
-    label: "Buat Laporan",
-    href: "/user/buatlaporan",
-    icon: BarChart2,
-  },
-
-  {
-    label: "Laporan Saya",
-    href: "/user/laporan-saya",
-    icon: FileText,
-  },
+const NAV_ITEMS = [
+  { label: "Beranda",      href: "/user",              icon: Home      },
+  { label: "Buat Laporan", href: "/user/buatlaporan",  icon: BarChart2 },
+  { label: "Laporan Saya", href: "/user/laporan-saya", icon: FileText  },
 ];
 
-// ─────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function buildUserState(base: {
-  name?: string;
-  bio?: string;
-  photo?: string | null;
-}) {
-  const name =
-    base.name || "User";
-
-  const initials = name
+function getInitials(name: string) {
+  return name
     .split(" ")
-    .map(
-      (w: string) => w[0]
-    )
+    .map((w) => w[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
-
-  return {
-    name,
-
-    bio: base.bio || "",
-
-    initials,
-
-    photo:
-      base.photo || null,
-  };
 }
 
-// ─────────────────────────────────────────────
-// COMPONENT
-// ─────────────────────────────────────────────
+// ─── Hooks ───────────────────────────────────────────────────────────────────
 
-export default function Sidebar() {
-  const pathname =
-    usePathname();
-
-  const {
-    data: session,
-  } = useSession();
-
-  const [hovered, setHovered] =
-    useState<string | null>(
-      null
-    );
-
-  const [scrolled, setScrolled] =
-    useState(false);
-
-  const [bio, setBio] =
-    useState("");
-
-  const [photo, setPhoto] =
-    useState<string | null>(
-      null
-    );
-
-  // ─────────────────────────────
-  // LOAD BIO + PHOTO
-  // ─────────────────────────────
-
- useEffect(() => {
-  if (!session?.user?.email)
-    return;
-
-  const loadProfile = () => {
-    const savedBio =
-      localStorage.getItem(
-        `bio_${session.user.email}`
-      ) || "";
-
-    const savedPhoto =
-      localStorage.getItem(
-        `profilePhoto_${session.user.email}`
-      );
-
-    setBio(savedBio);
-
-    setPhoto(savedPhoto);
-  };
-
-  loadProfile();
-
-  window.addEventListener(
-    "profileUpdated",
-    loadProfile
-  );
-
-  return () => {
-    window.removeEventListener(
-      "profileUpdated",
-      loadProfile
-    );
-  };
-}, [session]);
-
-  // ─────────────────────────────
-  // SCROLL EFFECT
-  // ─────────────────────────────
+function useScrolled(threshold = 40) {
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(
-        window.scrollY > 40
-      );
+    const onScroll = () => setScrolled(window.scrollY > threshold);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [threshold]);
+
+  return scrolled;
+}
+
+function useProfile(email?: string | null) {
+  const [bio,   setBio]   = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!email) return;
+
+    const load = () => {
+      setBio(localStorage.getItem(`bio_${email}`) ?? "");
+      setPhoto(localStorage.getItem(`profilePhoto_${email}`) ?? null);
     };
 
-    window.addEventListener(
-      "scroll",
-      onScroll,
-      {
-        passive: true,
-      }
-    );
+    load();
+    window.addEventListener("profileUpdated", load);
+    return () => window.removeEventListener("profileUpdated", load);
+  }, [email]);
 
-    return () =>
-      window.removeEventListener(
-        "scroll",
-        onScroll
-      );
-  }, []);
+  return { bio, photo };
+}
 
-  // ─────────────────────────────
-  // USER
-  // ─────────────────────────────
+// ─── Sub-components ──────────────────────────────────────────────────────────
 
-  const user =
-    buildUserState({
-      name:
-        session?.user?.name ||
-        "User",
+function Avatar({ photo, initials }: { photo: string | null; initials: string }) {
+  return (
+    <div className="w-10 h-10 rounded-full overflow-hidden bg-white/25 flex items-center justify-center text-sm font-bold text-white shrink-0">
+      {photo
+        ? <img src={photo} alt="Profile" className="w-full h-full object-cover" />
+        : initials}
+    </div>
+  );
+}
 
-      bio,
+function NavItem({
+  label,
+  href,
+  icon: Icon,
+  active,
+}: {
+  label:  string;
+  href:   string;
+  icon:   React.ElementType;
+  active: boolean;
+}) {
+  return (
+    <button
+      onClick={() => (window.location.href = href)}
+      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-[10px] w-full border-none cursor-pointer transition-colors duration-200
+        ${active
+          ? "bg-[#B45743] text-white"
+          : "bg-transparent text-[#374151] hover:bg-[#F9EAE7]"
+        }`}
+    >
+      <Icon size={20} className={active ? "text-white" : "text-[#6B7280]"} />
+      <span className="text-sm font-medium">{label}</span>
+    </button>
+  );
+}
 
-      photo,
-    });
+function ProfileCard({
+  name,
+  bio,
+  photo,
+  initials,
+}: {
+  name:     string;
+  bio:      string;
+  photo:    string | null;
+  initials: string;
+}) {
+  return (
+    <div className="bg-[#B45743] hover:bg-[#8B3A2A] rounded-[14px] px-3.5 py-3 flex items-center gap-3 cursor-pointer transition-colors duration-200">
+      <Avatar photo={photo} initials={initials} />
+      <div className="overflow-hidden flex-1">
+        <p className="text-sm font-bold text-white truncate">{name}</p>
+        {bio && (
+          <p className="mt-0.5 text-[11px] text-white/75 truncate">{bio}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
+
+export default function Sidebar() {
+  const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const scrolled = useScrolled();
+  const { bio, photo } = useProfile(session?.user?.email);
+
+  const name     = session?.user?.name ?? "User";
+  const initials = getInitials(name);
 
   return (
     <aside
-      style={{
-        width: "264px",
-        minHeight: "100vh",
-        backgroundColor: "#ffffff",
-        borderRight:
-          "1px solid #F0EFEF",
-        display: "flex",
-        flexDirection: "column",
-        fontFamily:
-          "'Plus Jakarta Sans', 'Segoe UI', sans-serif",
-        transition:
-          "all 0.35s ease",
-        position: "relative",
-        flexShrink: 0,
-        overflow: "hidden",
-
-        boxShadow: scrolled
-          ? "4px 0 24px rgba(180, 87, 67, 0.10), 2px 0 8px rgba(0,0,0,0.06)"
-          : "none",
-      }}
+      className={`w-[264px] min-h-screen bg-white border-r border-[#F0EFEF] flex flex-col shrink-0 overflow-hidden font-[Plus_Jakarta_Sans,Segoe_UI,sans-serif] transition-shadow duration-300
+        ${scrolled ? "shadow-[4px_0_24px_rgba(180,87,67,0.10),2px_0_8px_rgba(0,0,0,0.06)]" : "shadow-none"}`}
     >
-      {/* LOGO */}
+      {/* Logo */}
       <div
-        style={{
-          padding: scrolled
-            ? "14px 24px 12px"
-            : "22px 24px 18px",
-
-          borderBottom:
-            "1px solid #F5F5F5",
-
-          display: "flex",
-
-          alignItems: "center",
-
-          minHeight: scrolled
-            ? "64px"
-            : "78px",
-        }}
+        className={`px-6 border-b border-[#F5F5F5] flex items-center transition-all duration-300
+          ${scrolled ? "py-3.5 min-h-16" : "py-5 min-h-[78px]"}`}
       >
-        <Image
-          src="/images/logo.png"
-          alt="LaporinAja"
-          width={150}
-          height={38}
-        />
+        <Image src="/images/logo.png" alt="LaporinAja" width={150} height={38} />
       </div>
 
-      {/* PROFILE */}
-      <div
-        style={{
-          padding:
-            "16px 16px 12px",
-        }}
-      >
-        <Link
-          href="/user/profile"
-          style={{
-            textDecoration:
-              "none",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor:
-                hovered ===
-                "profile"
-                  ? BRAND_DARK
-                  : BRAND,
-
-              borderRadius:
-                "14px",
-
-              padding:
-                "13px 14px",
-
-              display: "flex",
-
-              alignItems:
-                "center",
-
-              gap: "12px",
-
-              cursor: "pointer",
-            }}
-            onMouseEnter={() =>
-              setHovered(
-                "profile"
-              )
-            }
-            onMouseLeave={() =>
-              setHovered(null)
-            }
-          >
-            {/* AVATAR */}
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius:
-                  "50%",
-                overflow:
-                  "hidden",
-                backgroundColor:
-                  "rgba(255,255,255,0.25)",
-                display: "flex",
-                alignItems:
-                  "center",
-                justifyContent:
-                  "center",
-                fontSize: "14px",
-                fontWeight: 700,
-                color: "#fff",
-              }}
-            >
-              {user.photo ? (
-                <img
-                  src={user.photo}
-                  alt="Profile"
-                  style={{
-                    width: "100%",
-                    height:
-                      "100%",
-                    objectFit:
-                      "cover",
-                  }}
-                />
-              ) : (
-                user.initials
-              )}
-            </div>
-
-            {/* USER */}
-            <div
-              style={{
-                overflow:
-                  "hidden",
-                flex: 1,
-              }}
-            >
-              <p
-                style={{
-                  margin: 0,
-                  fontSize:
-                    "14px",
-                  fontWeight: 700,
-                  color: "#fff",
-                }}
-              >
-                {user.name}
-              </p>
-
-              {user.bio && (
-                <p
-                  style={{
-                    margin:
-                      "3px 0 0",
-                    fontSize:
-                      "11px",
-                    color:
-                      "rgba(255,255,255,0.75)",
-                  }}
-                >
-                  {user.bio}
-                </p>
-              )}
-            </div>
-          </div>
+      {/* Profile card */}
+      <div className="px-4 pt-4 pb-3">
+        <Link href="/user/profile" className="no-underline">
+          <ProfileCard name={name} bio={bio} photo={photo} initials={initials} />
         </Link>
       </div>
 
-      {/* NAVIGATION */}
-      <nav
-        style={{
-          padding: "8px 12px",
-          flex: 1,
-        }}
-      >
-        {navItems.map(
-          ({
-            label,
-            href,
-            icon: Icon,
-          }) => {
-            const isActive =
-              pathname === href;
-
-            return (
-              <button
-                key={href}
-                onClick={() =>
-                  (window.location.href =
-                    href)
-                }
-                style={{
-                  display: "flex",
-                  alignItems:
-                    "center",
-                  gap: "12px",
-                  padding:
-                    "11px 14px",
-                  borderRadius:
-                    "10px",
-                  marginBottom:
-                    "4px",
-                  width: "100%",
-                  border: "none",
-
-                  backgroundColor:
-                    isActive
-                      ? BRAND
-                      : "transparent",
-
-                  cursor: "pointer",
-                }}
-              >
-                <Icon
-                  size={20}
-                  color={
-                    isActive
-                      ? "#fff"
-                      : "#6B7280"
-                  }
-                />
-
-                <span
-                  style={{
-                    color:
-                      isActive
-                        ? "#fff"
-                        : "#374151",
-                  }}
-                >
-                  {label}
-                </span>
-              </button>
-            );
-          }
-        )}
+      {/* Navigation */}
+      <nav className="px-3 py-2 flex-1 flex flex-col gap-1">
+        {NAV_ITEMS.map(({ label, href, icon }) => (
+          <NavItem
+            key={href}
+            label={label}
+            href={href}
+            icon={icon}
+            active={pathname === href}
+          />
+        ))}
       </nav>
 
-      {/* LOGOUT */}
-      <div
-        style={{
-          padding:
-            "0 12px 24px",
-        }}
-      >
+      {/* Logout */}
+      <div className="px-3 pb-6">
         <button
-          onClick={() =>
-            signOut({
-              callbackUrl:
-                "/auth/login",
-            })
-          }
-          style={{
-            display: "flex",
-            alignItems:
-              "center",
-            gap: "12px",
-            padding:
-              "11px 14px",
-            borderRadius:
-              "10px",
-            width: "100%",
-            border: "none",
-            cursor: "pointer",
-          }}
+          onClick={() => signOut({ callbackUrl: "/auth/login" })}
+          className="flex items-center gap-3 px-3.5 py-2.5 rounded-[10px] w-full border-none bg-transparent cursor-pointer text-sm font-medium text-[#6B7280] hover:bg-red-50 hover:text-red-600 transition-colors duration-200"
         >
           <LogOut size={20} />
-
           <span>Keluar</span>
         </button>
       </div>
