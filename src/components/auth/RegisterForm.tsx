@@ -300,7 +300,7 @@ export default function RegisterPage() {
                         e.target.value
                       )
                     }
-                    className="w-full h-[50px] rounded-xl bg-white px-4 pr-11 text-[14px] text-gray-900 outline-none"
+                    className="password-input w-full h-[50px] rounded-xl bg-white px-4 pr-11 text-[14px] text-gray-900 outline-none"
                     required
                   />
 
@@ -333,15 +333,13 @@ export default function RegisterPage() {
                         : "password"
                     }
                     placeholder="Ulangi kata sandi"
-                    value={
-                      confirmPassword
-                    }
+                    value={confirmPassword}
                     onChange={(e) =>
                       setConfirmPassword(
                         e.target.value
                       )
                     }
-                    className="w-full h-[50px] rounded-xl bg-white px-4 pr-11 text-[14px] text-gray-900 outline-none"
+                    className="password-input w-full h-[50px] rounded-xl bg-white px-4 pr-11 text-[14px] text-gray-900 outline-none"
                     required
                   />
 

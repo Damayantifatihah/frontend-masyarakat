@@ -260,7 +260,8 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* PASSWORD */}
+           
+          {/* PASSWORD */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-white font-semibold text-[14px]">
                   Kata Sandi
@@ -268,11 +269,7 @@ export default function LoginPage() {
 
                 <div className="relative">
                   <input
-                    type={
-                      showPassword
-                        ? "text"
-                        : "password"
-                    }
+                    type="password"
                     value={password}
                     onChange={(e) =>
                       setPassword(
@@ -281,20 +278,9 @@ export default function LoginPage() {
                     }
                     placeholder="Masukkan kata sandi"
                     required
-                    className="w-full h-[52px] rounded-xl px-4 pr-12 text-[14px] text-gray-700 bg-white outline-none border-2 border-transparent focus:border-[#E8734A] shadow-md transition placeholder-gray-300"
+                    autoComplete="current-password"
+                    className="w-full h-[52px] rounded-xl px-4 text-[14px] text-gray-700 bg-white outline-none border-2 border-transparent focus:border-[#E8734A] shadow-md transition placeholder-gray-300"
                   />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPassword(
-                        !showPassword
-                      )
-                    }
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    👁
-                  </button>
                 </div>
 
                 <div className="text-right">

@@ -1,676 +1,256 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-import {
-  useSession,
-} from "next-auth/react";
+import { useSession } from "next-auth/react";
 import api from "@/lib/axios";
+import { Camera, Trash2, Pencil, X, Save, User, Mail, Lock, FileText } from "lucide-react";
 
 export default function ProfilePage() {
-  const {
-  data: session,
-  update,
-} = useSession();
+  const { data: session, update } = useSession();
 
-  const [isEditing, setIsEditing] =
-    useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [user, setUser]           = useState<any>(null);
+  const [photo, setPhoto]         = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [form, setForm] = useState({ email: "", password: "", bio: "" });
 
-  const [user, setUser] =
-    useState<any>(null);
+  const videoRef  = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    bio: "",
-  });
-
-  const [photo, setPhoto] = useState<
-    string | null
-  >(null);
-
-  const [cameraOpen, setCameraOpen] =
-    useState(false);
-
-  const videoRef =
-    useRef<HTMLVideoElement | null>(
-      null
-    );
-
-  const canvasRef =
-    useRef<HTMLCanvasElement | null>(
-      null
-    );
-
-  const streamRef =
-    useRef<MediaStream | null>(null);
-
-  // ==============================
-  // LOAD USER
-  // ==============================
-useEffect(() => {
-  if (session?.user) {
-    const savedBio =
-      localStorage.getItem(
-        `bio_${session.user.email}`
-      ) ||
-      "Aktif melaporkan permasalahan lingkungan dan fasilitas umum.";
-
-    setUser({
-      ...session.user,
-      bio: savedBio,
-    });
-
-    setForm({
-      email:
-        session.user.email || "",
-      password: "",
-      bio: savedBio,
-    });
-
-    const savedPhoto =
-      localStorage.getItem(
-        `profilePhoto_${session.user.email}`
-      );
-
-    if (savedPhoto) {
-      setPhoto(savedPhoto);
+  // ── Load user ──
+  useEffect(() => {
+    if (session?.user) {
+      const savedBio = localStorage.getItem(`bio_${session.user.email}`) ||
+        "Aktif melaporkan permasalahan lingkungan dan fasilitas umum.";
+      setUser({ ...session.user, bio: savedBio });
+      setForm({ email: session.user.email || "", password: "", bio: savedBio });
+      const savedPhoto = localStorage.getItem(`profilePhoto_${session.user.email}`);
+      if (savedPhoto) setPhoto(savedPhoto);
     }
-  }
-}, [session]);
+  }, [session]);
 
-  // ==============================
-  // HANDLE INPUT
-  // ==============================
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement
-    >
-  ) => {
-    setForm({
-      ...form,
-      [e.target.name]:
-        e.target.value,
-    });
-  };
-
-  // ==============================
-  // OPEN CAMERA
-  // ==============================
+  // ── Camera ──
   const openCamera = async () => {
     try {
       setCameraOpen(true);
-
       setTimeout(async () => {
-        const stream =
-          await navigator.mediaDevices.getUserMedia(
-            {
-              video: {
-                facingMode: "user",
-                width: {
-                  ideal: 1280,
-                },
-                height: {
-                  ideal: 720,
-                },
-              },
-              audio: false,
-            }
-          );
-
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
         streamRef.current = stream;
-
         if (videoRef.current) {
-          videoRef.current.srcObject =
-            stream;
-
+          videoRef.current.srcObject = stream;
           await videoRef.current.play();
         }
       }, 300);
-    } catch (error) {
-      console.log(error);
-
-      alert(
-        "Tidak dapat mengakses kamera"
-      );
+    } catch {
+      alert("Tidak dapat mengakses kamera");
     }
   };
 
-  // ==============================
-  // STOP CAMERA
-  // ==============================
   const stopCamera = () => {
-    streamRef.current
-      ?.getTracks()
-      .forEach((track) =>
-        track.stop()
-      );
-
+    streamRef.current?.getTracks().forEach((t) => t.stop());
     setCameraOpen(false);
   };
 
-  // ==============================
-  // CAPTURE PHOTO
-  // ==============================
   const capturePhoto = () => {
-    if (
-      !videoRef.current ||
-      !canvasRef.current
-    )
-      return;
-
+    if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
-
     const canvas = canvasRef.current;
-
     canvas.width = video.videoWidth;
-    canvas.height =
-      video.videoHeight;
-
-    const ctx =
-      canvas.getContext("2d");
-
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
     ctx.drawImage(video, 0, 0);
-
-    const imageData =
-      canvas.toDataURL("image/png");
-
+    const imageData = canvas.toDataURL("image/png");
     setPhoto(imageData);
-
-    const currentUser = session?.user;
-
-    if (currentUser?.email) {
-      localStorage.setItem(
-        `profilePhoto_${currentUser.email}`,
-        imageData
-      );
+    if (session?.user?.email) {
+      localStorage.setItem(`profilePhoto_${session.user.email}`, imageData);
     }
-
-    // UPDATE SIDEBAR
-    window.dispatchEvent(
-      new Event("profileUpdated")
-    );
-
+    window.dispatchEvent(new Event("profileUpdated"));
     stopCamera();
   };
 
-  // ==============================
-  // REMOVE PHOTO
-  // ==============================
   const removePhoto = () => {
-    const currentUser = session?.user;
-
-    if (!currentUser?.email)
-      return;
-
-    localStorage.removeItem(
-      `profilePhoto_${currentUser.email}`
-    );
-
+    if (!session?.user?.email) return;
+    localStorage.removeItem(`profilePhoto_${session.user.email}`);
     setPhoto(null);
-
-    window.dispatchEvent(
-      new Event("profileUpdated")
-    );
+    window.dispatchEvent(new Event("profileUpdated"));
   };
 
-  // ==============================
-  // CLEANUP CAMERA
-  // ==============================
   useEffect(() => {
-    return () => {
-      streamRef.current
-        ?.getTracks()
-        .forEach((track) =>
-          track.stop()
-        );
-    };
+    return () => { streamRef.current?.getTracks().forEach((t) => t.stop()); };
   }, []);
 
-  // ==============================
-  // INITIALS
-  // ==============================
-  const initials =
-    user?.name
-      ?.split(" ")
-      .map(
-        (word: string) => word[0]
-      )
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() || "U";
-
-  // ==============================
-  // SAVE PROFILE
-  // ==============================
-const handleSave = async () => {
-  try {
-    setLoading(true);
-
-    const res = await api.put(
-      "/auth/profile",
-      {
-        email: form.email,
-        password: form.password,
-        bio: form.bio,
+  // ── Save ──
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      const res = await api.put("/auth/profile", {
+        email: form.email, password: form.password, bio: form.bio,
+      });
+      const updatedUser = { ...user, ...res.data.user, bio: form.bio };
+      localStorage.setItem(`bio_${updatedUser.email}`, form.bio);
+      if (user.email !== updatedUser.email) localStorage.removeItem(`bio_${user.email}`);
+      if (photo) {
+        localStorage.setItem(`profilePhoto_${updatedUser.email}`, photo);
+        if (user.email !== updatedUser.email) localStorage.removeItem(`profilePhoto_${user.email}`);
       }
-    );
-
-    const updatedUser = {
-      ...user,
-      ...res.data.user,
-      bio: form.bio,
-    };
-
-    // =========================
-    // SAVE BIO
-    // =========================
-    localStorage.setItem(
-      `bio_${updatedUser.email}`,
-      form.bio
-    );
-
-    // pindahin bio lama kalau email berubah
-    if (
-      user.email !== updatedUser.email
-    ) {
-      localStorage.removeItem(
-        `bio_${user.email}`
-      );
+      setUser(updatedUser);
+      setForm({ email: updatedUser.email, password: "", bio: form.bio });
+      await update({ ...session, user: { ...session?.user, email: updatedUser.email } });
+      window.dispatchEvent(new Event("profileUpdated"));
+      setIsEditing(false);
+      alert("Profil berhasil diperbarui");
+    } catch (error: any) {
+      alert(error?.response?.data?.message || "Gagal update profile");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // =========================
-    // SAVE PHOTO
-    // =========================
-    if (photo) {
-      localStorage.setItem(
-        `profilePhoto_${updatedUser.email}`,
-        photo
-      );
+  const initials = user?.name
+    ?.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase() || "U";
 
-      if (
-        user.email !==
-        updatedUser.email
-      ) {
-        localStorage.removeItem(
-          `profilePhoto_${user.email}`
-        );
-      }
-    }
-
-    // =========================
-    // UPDATE STATE
-    // =========================
-    setUser(updatedUser);
-
-    setForm({
-      email: updatedUser.email,
-      password: "",
-      bio: form.bio,
-    });
-
-    // =========================
-    // UPDATE SESSION
-    // =========================
-    await update({
-      ...session,
-      user: {
-        ...session?.user,
-        email: updatedUser.email,
-      },
-    });
-
-    // =========================
-    // TRIGGER SIDEBAR UPDATE
-    // =========================
-    window.dispatchEvent(
-      new Event("profileUpdated")
-    );
-
-    setIsEditing(false);
-
-    alert(
-      "Profil berhasil diperbarui"
-    );
-  } catch (error: any) {
-    console.log(error);
-
-    alert(
-      error?.response?.data
-        ?.message ||
-        "Gagal update profile"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  const inputClass = "w-full h-11 rounded-xl border-[1.5px] border-gray-200 px-4 text-sm text-gray-800 outline-none font-[inherit] bg-white focus:border-[#B45743] focus:ring-2 focus:ring-[#B45743]/10 transition-colors";
+  const readonlyClass = "w-full h-11 rounded-xl border-[1.5px] border-gray-100 bg-gray-50 px-4 text-sm font-medium text-gray-700 flex items-center";
 
   return (
-    <div className="max-w-3xl p-6">
-      {/* HEADER */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Profil Saya
-        </h1>
+    <div className="max-w-2xl p-6" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-        <p className="mt-1 text-sm text-gray-400">
-          Kelola informasi akun
-          kamu
-        </p>
+      {/* ── PAGE HEADER ── */}
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-gray-900">Profil Saya</h1>
+        <p className="mt-1 text-sm text-gray-400">Kelola informasi akun kamu</p>
       </div>
 
-      {/* CARD */}
-      <div
-        className="
-        overflow-hidden rounded-3xl
-        border border-gray-100
-        bg-white shadow-sm
-      "
-      >
-        <div className="px-6 pb-6">
-          {/* TOP */}
-          <div
-            className="
-            mt-10 mb-6
-            flex items-start justify-between
-          "
-          >
+      {/* ── CARD ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+
+        {/* Card top accent */}
+        <div className="h-1 bg-[#B45743]" />
+
+        <div className="p-6">
+
+          {/* ── PROFILE TOP ── */}
+          <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
-              {/* AVATAR */}
+              {/* Avatar */}
               <div className="relative">
                 {photo ? (
-                  <img
-                    src={photo}
-                    alt="Profile"
-                    className="
-                      h-24 w-24 rounded-full
-                      border-4 border-white
-                      object-cover shadow-md
-                    "
-                  />
+                  <img src={photo} alt="Profile"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-md ring-2 ring-[#F0D0C8]" />
                 ) : (
-                  <div
-                    className="
-                    flex h-24 w-24
-                    items-center justify-center
-                    rounded-full border-4 border-white
-                    bg-[#C95E24]
-                    text-3xl font-bold text-white
-                    shadow-md
-                  "
-                  >
+                  <div className="w-20 h-20 rounded-full bg-[#B45743] flex items-center justify-center text-white text-2xl font-bold shadow-md ring-2 ring-[#F0D0C8]">
                     {initials}
                   </div>
                 )}
 
-                {/* ACTION */}
                 {isEditing && (
                   <>
-                    {/* CAMERA */}
-                    <button
-                      onClick={
-                        openCamera
-                      }
-                      className="
-                        absolute -right-1 -bottom-1
-                        flex h-9 w-9
-                        items-center justify-center
-                        rounded-full
-                        bg-[#E8763A]
-                        shadow-md transition
-                        hover:bg-[#C95E24]
-                      "
-                    >
-                      📷
+                    <button onClick={openCamera}
+                      className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#B45743] hover:bg-[#8B3A2A] flex items-center justify-center shadow-md border-2 border-white transition-colors">
+                      <Camera size={13} color="#fff" />
                     </button>
-
-                    {/* DELETE */}
                     {photo && (
-                      <button
-                        onClick={
-                          removePhoto
-                        }
-                        className="
-                          absolute -bottom-1 -left-1
-                          flex h-9 w-9
-                          items-center justify-center
-                          rounded-full
-                          bg-red-500
-                          text-white shadow-md
-                          transition hover:bg-red-600
-                        "
-                      >
-                        🗑️
+                      <button onClick={removePhoto}
+                        className="absolute -bottom-1 -left-1 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-md border-2 border-white transition-colors">
+                        <Trash2 size={13} color="#fff" />
                       </button>
                     )}
                   </>
                 )}
               </div>
 
-              {/* USER */}
+              {/* Name */}
               <div>
-                <h2
-                  className="
-                  text-2xl font-bold
-                  text-gray-800
-                "
-                >
-                  {user?.name ||
-                    "Loading..."}
-                </h2>
-
-                <p
-                  className="
-                  mt-2 max-w-sm
-                  text-xs text-gray-400
-                "
-                >
-                  Nama pengguna
-                  mengikuti data NIK
-                  dan tidak dapat
-                  diubah.
+                <h2 className="text-lg font-bold text-gray-900">{user?.name || "Loading..."}</h2>
+                <p className="text-xs text-gray-400 mt-1 max-w-xs">
+                  Nama pengguna mengikuti data NIK dan tidak dapat diubah.
                 </p>
               </div>
             </div>
 
-            {/* BUTTON EDIT */}
+            {/* Edit toggle */}
             <button
-              onClick={() =>
-                setIsEditing(
-                  !isEditing
-                )
-              }
-              className={`h-10 rounded-xl border px-5 text-sm font-semibold transition-all duration-200
-              ${
+              onClick={() => setIsEditing(!isEditing)}
+              className={`flex items-center gap-1.5 h-9 px-4 rounded-xl border-[1.5px] text-sm font-semibold transition-all font-[inherit] ${
                 isEditing
-                  ? "border-gray-200 bg-gray-100 text-gray-500 hover:bg-gray-200"
-                  : "border-[#E8763A] bg-[#FEF0E8] text-[#C95E24] hover:bg-[#FDDCCA]"
+                  ? "border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100"
+                  : "border-[#B45743] bg-[#F9EAE7] text-[#B45743] hover:bg-[#F0D0C8]"
               }`}
             >
-              {isEditing
-                ? "Batal"
-                : "Edit Profil"}
+              {isEditing ? <><X size={14} /> Batal</> : <><Pencil size={14} /> Edit Profil</>}
             </button>
           </div>
 
-          <hr className="mb-6 border-gray-100" />
+          <div className="border-t border-gray-100 mb-6" />
 
-          {/* FORM */}
+          {/* ── FORM FIELDS ── */}
           <div className="flex flex-col gap-5">
-            {/* EMAIL */}
-            <div className="flex flex-col gap-2">
-              <label
-                className="
-                text-xs font-semibold
-                tracking-wide text-gray-500 uppercase
-              "
-              >
-                Email
-              </label>
 
+            {/* Email */}
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-1.5 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
+                <Mail size={12} className="text-gray-400" /> Email
+              </label>
               {isEditing ? (
-                <input
-                  type="email"
-                  name="email"
-                  value={
-                    form.email
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  className="
-                    h-11 rounded-xl
-                    border border-gray-300
-                    px-4 text-sm
-                    text-gray-700 outline-none
-                    transition
-                    focus:border-[#E8763A]
-                    focus:ring-4
-                    focus:ring-[#E8763A]/10
-                  "
-                />
+                <input type="email" name="email" value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className={inputClass} />
               ) : (
-                <div
-                  className="
-                  flex h-11 items-center
-                  rounded-xl border
-                  border-gray-100 bg-gray-50
-                  px-4 text-sm
-                  font-medium text-gray-800
-                "
-                >
-                  {form.email}
-                </div>
+                <div className={readonlyClass}>{form.email}</div>
               )}
             </div>
 
-            {/* PASSWORD */}
-            <div className="flex flex-col gap-2">
-              <label
-                className="
-                text-xs font-semibold
-                tracking-wide text-gray-500 uppercase
-              "
-              >
-                Password
+            {/* Password */}
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-1.5 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
+                <Lock size={12} className="text-gray-400" /> Password
               </label>
-
               {isEditing ? (
-                <input
-                  type="password"
-                  name="password"
-                  value={
-                    form.password
-                  }
-                  onChange={
-                    handleChange
-                  }
-                  placeholder="Masukkan password baru"
-                  className="
-                    h-11 rounded-xl
-                    border border-gray-300
-                    px-4 text-sm
-                    text-gray-700 outline-none
-                    transition
-                    placeholder:text-gray-400
-                    focus:border-[#E8763A]
-                    focus:ring-4
-                    focus:ring-[#E8763A]/10
-                  "
-                />
+                <input type="password" name="password" value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  placeholder="Kosongkan jika tidak ingin mengubah"
+                  className={`${inputClass} placeholder:text-gray-300`} />
               ) : (
-                <div
-                  className="
-                  flex h-11 items-center
-                  rounded-xl border
-                  border-gray-100 bg-gray-50
-                  px-4 text-sm
-                  font-medium text-gray-400
-                "
-                >
-                  ••••••••••
-                </div>
+                <div className={`${readonlyClass} tracking-widest text-gray-400`}>••••••••</div>
               )}
             </div>
 
-            {/* BIO */}
-            <div className="flex flex-col gap-2">
-              <label
-                className="
-                text-xs font-semibold
-                tracking-wide text-gray-500 uppercase
-              "
-              >
-                Bio Singkat
+            {/* Bio */}
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-1.5 text-[12px] font-bold text-gray-500 uppercase tracking-wider">
+                <FileText size={12} className="text-gray-400" /> Bio Singkat
               </label>
-
               {isEditing ? (
-                <textarea
-                  name="bio"
-                  value={form.bio}
-                  onChange={
-                    handleChange
-                  }
-                  rows={4}
-                  placeholder="Tulis deskripsi singkat..."
-                  className="
-                    resize-none rounded-xl
-                    border border-gray-300
-                    px-4 py-3 text-sm
-                    text-gray-700 outline-none
-                    transition
-                    placeholder:text-gray-400
-                    focus:border-[#E8763A]
-                    focus:ring-4
-                    focus:ring-[#E8763A]/10
-                  "
-                />
+                <textarea name="bio" value={form.bio} rows={3}
+                  onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                  placeholder="Tulis deskripsi singkat tentang kamu..."
+                  className="w-full rounded-xl border-[1.5px] border-gray-200 px-4 py-3 text-sm text-gray-800 outline-none resize-none font-[inherit] bg-white focus:border-[#B45743] focus:ring-2 focus:ring-[#B45743]/10 transition-colors leading-relaxed placeholder:text-gray-300" />
               ) : (
-                <div
-                  className="
-                  rounded-xl border
-                  border-gray-100 bg-gray-50
-                  px-4 py-3 text-sm
-                  leading-relaxed text-gray-700
-                "
-                >
+                <div className="w-full rounded-xl border-[1.5px] border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-700 leading-relaxed">
                   {form.bio}
                 </div>
               )}
             </div>
           </div>
 
-          {/* SAVE */}
+          {/* ── SAVE BUTTON ── */}
           {isEditing && (
             <>
-              <hr className="mt-6 mb-5 border-gray-100" />
-
+              <div className="border-t border-gray-100 mt-6 mb-5" />
               <div className="flex justify-end">
-                <button
-                  onClick={
-                    handleSave
-                  }
-                  disabled={loading}
-                  className="
-                    h-11 rounded-xl
-                    bg-[#E8763A]
-                    px-6 text-sm
-                    font-bold text-white
-                    shadow-sm transition-all
-                    duration-200
-                    hover:bg-[#C95E24]
-                    disabled:cursor-not-allowed
-                    disabled:opacity-50
-                  "
-                >
+                <button onClick={handleSave} disabled={loading}
+                  className="flex items-center gap-2 h-10 px-6 rounded-xl bg-[#B45743] hover:bg-[#8B3A2A] text-white text-sm font-bold border-none cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed font-[inherit]">
                   {loading
-                    ? "Menyimpan..."
-                    : "Simpan Perubahan"}
+                    ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Menyimpan...</>
+                    : <><Save size={14} /> Simpan Perubahan</>
+                  }
                 </button>
               </div>
             </>
@@ -678,86 +258,44 @@ const handleSave = async () => {
         </div>
       </div>
 
-      {/* CAMERA MODAL */}
+      {/* ── CAMERA MODAL ── */}
       {cameraOpen && (
-        <div
-          className="
-          fixed inset-0 z-50
-          flex items-center justify-center
-          bg-black/80 p-4
-        "
-        >
-          <div
-            className="
-            w-full max-w-md
-            rounded-3xl bg-white p-4
-          "
-          >
-            <h2
-              className="
-              mb-4 text-lg
-              font-bold text-gray-800
-            "
-            >
-              Ambil Foto Profil
-            </h2>
-
-            <div
-              className="
-              overflow-hidden rounded-2xl
-              bg-black
-            "
-            >
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="
-                  h-[400px] w-full
-                  rounded-2xl object-cover
-                "
-              />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-2xl">
+            {/* Modal header */}
+            <div className="bg-[#B45743] px-5 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-[15px] font-bold text-white">Ambil Foto Profil</h2>
+                <p className="text-xs text-white/70 mt-0.5">Posisikan wajah di tengah frame</p>
+              </div>
+              <button onClick={stopCamera}
+                className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center border-none cursor-pointer transition-colors">
+                <X size={16} color="#fff" />
+              </button>
             </div>
 
-            <div className="mt-4 flex gap-3">
-              <button
-                onClick={
-                  stopCamera
-                }
-                className="
-                  h-11 flex-1 rounded-xl
-                  border border-gray-300
-                  font-semibold text-gray-600
-                  transition hover:bg-gray-100
-                "
-              >
+            {/* Video */}
+            <div className="bg-black">
+              <video ref={videoRef} autoPlay playsInline muted
+                className="w-full h-[320px] object-cover" />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 p-4">
+              <button onClick={stopCamera}
+                className="flex-1 h-10 rounded-xl border-[1.5px] border-gray-200 bg-white text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors font-[inherit]">
                 Batal
               </button>
-
-              <button
-                onClick={
-                  capturePhoto
-                }
-                className="
-                  h-11 flex-1 rounded-xl
-                  bg-[#E8763A]
-                  font-semibold text-white
-                  transition hover:bg-[#C95E24]
-                "
-              >
-                Ambil Foto
+              <button onClick={capturePhoto}
+                className="flex-[2] h-10 rounded-xl bg-[#B45743] hover:bg-[#8B3A2A] text-white text-sm font-bold border-none cursor-pointer flex items-center justify-center gap-2 transition-colors font-[inherit]">
+                <Camera size={15} /> Ambil Foto
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* HIDDEN CANVAS */}
-      <canvas
-        ref={canvasRef}
-        className="hidden"
-      />
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 }
