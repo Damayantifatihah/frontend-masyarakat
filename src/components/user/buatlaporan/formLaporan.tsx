@@ -258,13 +258,6 @@ const res = await api.post("/laporan", formData);
 
 {/* LOKASI MAP */}
 <Field label="Lokasi Kejadian">
-  <input
-    type="text"
-    value={lokasi}
-    readOnly
-    placeholder="Cari atau klik lokasi pada peta"
-    className={inputClass}
-  />
 
   <div className="mt-3 overflow-hidden rounded-xl border border-gray-200">
     <MapPicker

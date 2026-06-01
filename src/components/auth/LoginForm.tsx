@@ -5,6 +5,9 @@ import {
   useState,
 } from "react";
 
+import { AnimatePresence } from "framer-motion";
+import SplashTransition from "@/components/splashTransition";
+
 import {
   useRouter,
 } from "next/navigation";
@@ -19,6 +22,9 @@ import {
 } from "next-auth/react";
 
 export default function LoginPage() {
+  const [showSplash, setShowSplash] =
+  useState(false);
+
   const router =
     useRouter();
 
@@ -165,6 +171,7 @@ export default function LoginPage() {
   };
 
   return (
+    <>
     <div className="min-h-screen w-full flex items-center justify-center overflow-hidden font-[Poppins,sans-serif]">
       <div className="relative w-full h-screen flex">
         
@@ -316,17 +323,30 @@ export default function LoginPage() {
             <p className="text-center text-[13px] text-white/70 mt-7">
               Belum punya akun?{" "}
               
-              <Link
-                href="/auth/register"
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSplash(true);
+
+                  setTimeout(() => {
+                    router.push("/auth/register");
+                  }, 1200);
+                }}
                 className="font-bold text-white hover:underline"
               >
                 Daftar Gratis
-              </Link>
+              </button>
             </p>
-
           </div>
         </div>
       </div>
     </div>
+    <AnimatePresence>
+          {showSplash && (
+            <SplashTransition />
+          )}
+        </AnimatePresence>
+      </>
+    
   );
 }

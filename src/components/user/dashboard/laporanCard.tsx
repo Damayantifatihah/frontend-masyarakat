@@ -16,153 +16,104 @@ interface Props {
   };
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  selesai:  { bg: "#DCFCE7", text: "#15803D", label: "Selesai" },
-  diproses: { bg: "#FEF3C7", text: "#B45309", label: "Diproses" },
-  ditolak:  { bg: "#FEE2E2", text: "#B91C1C", label: "Ditolak" },
+const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+  selesai:    { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500", label: "Selesai"   },
+  diproses:   { bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-400",   label: "Diproses"  },
+  ditolak:    { bg: "bg-red-50",     text: "text-red-700",     dot: "bg-red-500",     label: "Ditolak"   },
+  verifikasi: { bg: "bg-blue-50",    text: "text-blue-700",    dot: "bg-blue-400",    label: "Menunggu"  },
 };
 
-const DEFAULT_STATUS = { bg: "#DBEAFE", text: "#1D4ED8", label: "Menunggu" };
+const AVATAR_COLORS = [
+  "from-yellow-300 to-amber-400",
+  "from-emerald-300 to-teal-400",
+  "from-blue-300 to-blue-500",
+  "from-pink-300 to-rose-400",
+  "from-violet-300 to-purple-400",
+  "from-orange-300 to-orange-500",
+];
 
-function avatarColor(name: string) {
-  const colors = [
-    ["#FDE68A", "#F59E0B"],
-    ["#BFDBFE", "#3B82F6"],
-    ["#BBF7D0", "#10B981"],
-    ["#FBCFE8", "#EC4899"],
-    ["#DDD6FE", "#8B5CF6"],
-    ["#FED7AA", "#F97316"],
-  ];
-  const idx = (name?.charCodeAt(0) ?? 0) % colors.length;
-  return colors[idx];
+function getAvatarGradient(name: string) {
+  return AVATAR_COLORS[(name?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
 }
 
 export default function LaporanCard({ laporan }: Props) {
-  const status = STATUS_CONFIG[laporan.status] ?? DEFAULT_STATUS;
+  const status = STATUS_CONFIG[laporan.status] ?? STATUS_CONFIG.verifikasi;
 
   const formattedDate = laporan.created_at
     ? new Date(laporan.created_at).toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
+        day: "numeric", month: "short", year: "numeric",
       })
     : null;
 
-  const [bgColor, textColor] = avatarColor(laporan.user_name);
-
   return (
-    <div
-      style={{
-        background: "#FFFFFF",
-        borderRadius: "20px",
-        border: "1px solid #F0F0F0",
-        overflow: "hidden",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-      }}
-    >
-      {/* HEADER */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "14px 16px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "50%",
-              background: `linear-gradient(135deg, ${bgColor}, ${textColor})`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontWeight: 700,
-              fontSize: "14px",
-              flexShrink: 0,
-            }}
-          >
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+
+      {/* ── HEADER ── */}
+      <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Avatar */}
+          <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(laporan.user_name)} flex items-center justify-center text-white font-bold text-sm shrink-0`}>
             {laporan.user_name?.charAt(0)?.toUpperCase()}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-            <span style={{ fontSize: "13px", fontWeight: 700, color: "#1F2937", lineHeight: 1 }}>
+          {/* Name + meta */}
+          <div className="flex flex-col gap-1 min-w-0">
+            <span className="text-sm font-bold text-gray-900 leading-none">
               {laporan.user_name}
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", color: "#9CA3AF" }}>
-                <MapPin size={10} strokeWidth={2} />
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="flex items-center gap-1 text-[11px] text-gray-400 truncate max-w-[240px]">
+                <MapPin size={10} strokeWidth={2} className="shrink-0" />
                 {laporan.lokasi}
               </span>
               {formattedDate && (
-                <>
-                  <span style={{ color: "#E5E7EB" }}>·</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "3px", fontSize: "11px", color: "#9CA3AF" }}>
-                    <Calendar size={10} strokeWidth={2} />
-                    {formattedDate}
-                  </span>
-                </>
+                <span className="flex items-center gap-1 text-[11px] text-gray-400 whitespace-nowrap shrink-0">
+                  <span className="text-gray-200">·</span>
+                  <Calendar size={10} strokeWidth={2} className="shrink-0" />
+                  {formattedDate}
+                </span>
               )}
             </div>
           </div>
         </div>
 
-        <span
-          style={{
-            background: status.bg,
-            color: status.text,
-            padding: "4px 12px",
-            borderRadius: "999px",
-            fontSize: "11px",
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-          }}
-        >
+        {/* Status badge */}
+        <span className={`flex items-center gap-1.5 ${status.bg} ${status.text} px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap shrink-0 ml-4`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
           {status.label}
         </span>
       </div>
 
-      {/* IMAGE — full bleed, no margin */}
+      {/* ── IMAGE: full bleed, object-contain, tidak dipotong ── */}
       {laporan.gambar?.length > 0 && (
-        <img
-          src={laporan.gambar[0]}
-          alt={laporan.judul_laporan}
-          style={{
-            width: "100%",
-            height: "260px",
-            objectFit: "contain",
-            display: "block",
-          }}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = "/images/placeholder.png";
-          }}
-        />
+        <div className="w-full bg-gray-50 border-y border-gray-100">
+          <img
+            src={laporan.gambar[0]}
+            alt={laporan.judul_laporan}
+            className="w-full max-h-[320px] object-contain block"
+            onError={(e) => { (e.target as HTMLImageElement).src = "/images/placeholder.png"; }}
+          />
+        </div>
       )}
 
-      {/* CONTENT */}
-      <div style={{ padding: "14px 16px 0" }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: "14px", fontWeight: 700, color: "#1F2937", lineHeight: 1.4 }}>
+      {/* ── CONTENT ── */}
+      <div className="px-5 pt-4 pb-3">
+        <h2 className="text-[15px] font-bold text-gray-900 leading-snug mb-1.5">
           {laporan.judul_laporan}
         </h2>
-        <p style={{ margin: 0, fontSize: "13px", color: "#6B7280", lineHeight: 1.6 }}>
+        <p className="text-[13px] text-gray-500 leading-relaxed line-clamp-3">
           {laporan.isi_laporan}
         </p>
       </div>
 
-      {/* COMMENT SECTION — separated with bg */}
-      <div
-        style={{
-          margin: "14px 16px 16px",
-          background: "#F9FAFB",
-          borderRadius: "14px",
-          padding: "12px",
-        }}
-      >
+      {/* ── DIVIDER ── */}
+      <div className="border-t border-gray-100 mx-5" />
+
+      {/* ── COMMENT SECTION ── */}
+      <div className="px-5 py-4">
         <CommentSection laporanId={laporan.id} />
       </div>
+
     </div>
   );
 }

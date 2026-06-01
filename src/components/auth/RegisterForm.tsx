@@ -5,9 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
+import { AnimatePresence } from "framer-motion";
+import SplashTransition from "@/components/splashTransition";
 
 export default function RegisterPage() {
   const router = useRouter();
+
+   const [showSplash, setShowSplash] =
+    useState(false);
+
 
   const [showPassword, setShowPassword] =
     useState(false);
@@ -127,6 +133,7 @@ export default function RegisterPage() {
   };
 
   return (
+    <>
     <div className="min-h-screen w-full bg-white overflow-hidden font-[Poppins,sans-serif]">
       <div className="relative w-full min-h-screen flex">
         {/* BACKGROUND */}
@@ -374,12 +381,19 @@ export default function RegisterPage() {
 
                 <p className="text-white/70 text-[13px] mt-1">
                   Sudah punya akun?{" "}
-                  <Link
-                    href="/auth/login"
-                    className="text-white font-bold hover:underline"
-                  >
-                    Masuk
-                  </Link>
+               <button
+                  type="button"
+                  onClick={() => {
+                    setShowSplash(true);
+
+                    setTimeout(() => {
+                      router.push("/auth/login");
+                    }, 1200);
+                  }}
+                  className="text-white font-bold hover:underline"
+                >
+                  Masuk
+                </button>
                 </p>
               </div>
             </form>
@@ -387,5 +401,12 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+
+     <AnimatePresence>
+      {showSplash && (
+        <SplashTransition />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function Navbar() {
+  const [activeMenu, setActiveMenu] =
+  useState("Beranda");
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -37,17 +39,22 @@ export default function Navbar() {
 
         {/* Desktop nav links */}
         <ul className="hidden md:flex items-center gap-9">
-          {[
-            { label: "Beranda", active: true },
-            { label: "Layanan", active: false },
-            { label: "Cara Kerja", active: false },
-            { label: "Testimoni", active: false },
-          ].map(({ label, active }) => (
+       {[
+          "Beranda",
+          "Layanan",
+          "Cara Kerja",
+          "Testimoni",
+        ].map((label) => (
             <li key={label}>
-              <Link
-                href={`#${label.toLowerCase().replace(" ", "-")}`}
+             <Link
+                href={`#${label
+                  .toLowerCase()
+                  .replace(" ", "-")}`}
+                onClick={() =>
+                  setActiveMenu(label)
+                }
                 className={`text-[15px] font-semibold transition-all duration-300 ${
-                  active
+                  activeMenu === label
                     ? "text-[#E8734A] border-b-2 border-[#E8734A] pb-0.5"
                     : "text-gray-700 hover:text-[#E8734A]"
                 }`}
@@ -111,12 +118,26 @@ export default function Navbar() {
           menuOpen ? "max-h-[300px] py-4" : "max-h-0"
         } bg-white/95 backdrop-blur-xl border-t border-gray-100 px-6 flex flex-col gap-4`}
       >
-        {["Beranda", "Cara Kerja", "Layanan", "Testimoni"].map((item) => (
+       {[
+          "Beranda",
+          "Layanan",
+          "Cara Kerja",
+          "Testimoni",
+        ].map((item) => (
           <Link
             key={item}
-            href={`#${item.toLowerCase().replace(" ", "-")}`}
-            onClick={() => setMenuOpen(false)}
-            className="text-sm font-semibold text-gray-700 hover:text-[#E8734A] transition-colors"
+            href={`#${item
+              .toLowerCase()
+              .replace(" ", "-")}`}
+            onClick={() => {
+              setMenuOpen(false);
+              setActiveMenu(item);
+            }}
+            className={`text-sm font-semibold transition-colors ${
+              activeMenu === item
+                ? "text-[#E8734A]"
+                : "text-gray-700 hover:text-[#E8734A]"
+            }`}
           >
             {item}
           </Link>

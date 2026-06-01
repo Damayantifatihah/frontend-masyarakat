@@ -18,7 +18,7 @@ interface Laporan {
 export default function LaporanFeed() {
   const [laporan, setLaporan] = useState<Laporan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError]     = useState(false);
 
   const fetchLaporan = async () => {
     try {
@@ -33,37 +33,14 @@ export default function LaporanFeed() {
     }
   };
 
-  useEffect(() => {
-    fetchLaporan();
-  }, []);
+  useEffect(() => { fetchLaporan(); }, []);
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "48px 0",
-          color: "#9CA3AF",
-          fontSize: "13px",
-          gap: "8px",
-        }}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ animation: "spin 1s linear infinite" }}
-        >
+      <div className="flex items-center justify-center gap-2 py-12 text-gray-400 text-[13px]">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
           <path d="M21 12a9 9 0 1 1-6.219-8.56" />
         </svg>
-        <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>
         Memuat laporan...
       </div>
     );
@@ -71,30 +48,11 @@ export default function LaporanFeed() {
 
   if (error) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "48px 0",
-          gap: "12px",
-        }}
-      >
-        <p style={{ margin: 0, fontSize: "13px", color: "#6B7280" }}>
-          Gagal memuat laporan.
-        </p>
+      <div className="flex flex-col items-center gap-3 py-12">
+        <p className="text-[13px] text-gray-500">Gagal memuat laporan.</p>
         <button
           onClick={fetchLaporan}
-          style={{
-            padding: "8px 20px",
-            borderRadius: "8px",
-            border: "1px solid #E5E7EB",
-            background: "#fff",
-            cursor: "pointer",
-            fontSize: "13px",
-            fontWeight: 600,
-            color: "#374151",
-          }}
+          className="px-5 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors font-[inherit]"
         >
           Coba lagi
         </button>
@@ -104,64 +62,39 @@ export default function LaporanFeed() {
 
   if (laporan.length === 0) {
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          padding: "48px 0",
-          gap: "8px",
-        }}
-      >
-        <svg
-          width="36"
-          height="36"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#D1D5DB"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+      <div className="flex flex-col items-center gap-2 py-12">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
           <rect x="9" y="3" width="6" height="4" rx="1" />
         </svg>
-        <p style={{ margin: 0, fontSize: "13px", color: "#9CA3AF" }}>
-          Belum ada laporan.
-        </p>
+        <p className="text-[13px] text-gray-400">Belum ada laporan.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ width: "100%" }}>
-      {/* Section label */}
-      <p
-        style={{
-          margin: "0 0 12px",
-          fontSize: "11px",
-          fontWeight: 700,
-          color: "#9CA3AF",
-          letterSpacing: "0.06em",
-          textTransform: "uppercase",
-        }}
-      >
-        Laporan Terbaru
-      </p>
+    <div className="w-full">
 
-      {/* Feed */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-          width: "100%",
-        }}
-      >
+      {/* ── SECTION HEADER ── */}
+      <div className="flex items-center justify-between mb-5 px-1">
+        <div className="flex items-center gap-2.5">
+          <div className="w-1 h-5 rounded-full bg-[#B45743]" />
+          <span className="text-sm font-bold text-gray-700 tracking-wide">
+            Laporan Terbaru
+          </span>
+        </div>
+        <span className="text-xs font-semibold text-[#B45743] bg-[#F9EAE7] border border-[#F0D0C8] px-2.5 py-1 rounded-full">
+          {laporan.length} laporan
+        </span>
+      </div>
+
+      {/* ── CARDS ── */}
+      <div className="flex flex-col gap-4 w-full">
         {laporan.map((item) => (
           <LaporanCard key={item.id} laporan={item} />
         ))}
       </div>
+
     </div>
   );
 }
