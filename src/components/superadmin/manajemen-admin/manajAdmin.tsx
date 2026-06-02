@@ -18,6 +18,15 @@ export default function ManajemenAdmin() {
   const [openEdit, setOpenEdit]     = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [editForm, setEditForm]     = useState({ name: "", password: "" });
+  const [openCreate, setOpenCreate] =
+  useState(false);
+
+const [createForm, setCreateForm] =
+  useState({
+    name: "",
+    email: "",
+    password: "",
+  });
 
   useEffect(() => { fetchAdmins(); }, []);
 
@@ -62,6 +71,39 @@ export default function ManajemenAdmin() {
     }
   };
 
+
+const handleCreateAdmin = async () => {
+  try {
+    const res = await api.post(
+      "/superadmin/admins",
+      createForm
+    );
+
+    console.log("SUCCESS:", res.data);
+
+    setCreateForm({
+      name: "",
+      email: "",
+      password: "",
+    });
+
+    setOpenCreate(false);
+
+    fetchAdmins();
+
+    alert("Admin berhasil ditambahkan");
+  } catch (error: any) {
+    console.log("ERROR:", error);
+    console.log("DATA:", error.response?.data);
+    console.log("STATUS:", error.response?.status);
+
+    alert(
+      error.response?.data?.message ||
+      "Gagal menambahkan admin"
+    );
+  }
+};
+
   const filteredAdmins = admins.filter((a) =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
     a.email.toLowerCase().includes(search.toLowerCase())
@@ -87,10 +129,15 @@ export default function ManajemenAdmin() {
           <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Manajemen Admin</h1>
           <p className="text-xs text-gray-400 mt-0.5 font-medium">Kelola seluruh akun admin</p>
         </div>
-        <button className="flex items-center gap-2 h-9 px-4 rounded-xl bg-[#B45743] hover:bg-[#a04d3b] active:scale-95 text-white text-xs font-semibold transition-all shadow-sm">
-          <Plus size={14} />
-          Tambah Admin
-        </button>
+     <button
+        onClick={() =>
+          setOpenCreate(true)
+        }
+        className="flex items-center gap-2 h-9 px-4 rounded-xl bg-[#B45743] hover:bg-[#a04d3b] active:scale-95 text-white text-xs font-semibold transition-all shadow-sm"
+      >
+        <Plus size={14} />
+        Tambah Admin
+      </button>
       </div>
 
       {/* SEARCH */}
@@ -171,85 +218,86 @@ export default function ManajemenAdmin() {
         </div>
       </div>
 
-      {/* MODAL EDIT */}
-      {openEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
 
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center">
-                  <Pencil size={14} className="text-amber-600" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-gray-900">Edit Admin</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">{selectedAdmin?.email}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setOpenEdit(false)}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
-              >
-                <X size={15} />
-              </button>
-            </div>
+  {/* MODAL CREATE */}
+{openCreate && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+    <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
 
-            {/* Modal Body */}
-            <div className="px-6 py-5 flex flex-col gap-4">
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <h2 className="font-bold">Tambah Admin</h2>
 
-              {/* Username */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Username</label>
-                <div className="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-2.5 focus-within:border-[#B45743] focus-within:ring-2 focus-within:ring-[#B45743]/10 transition-all">
-                  <User size={14} className="text-gray-400 shrink-0" />
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full bg-transparent text-sm text-gray-800 outline-none placeholder-gray-300"
-                    placeholder="Nama admin"
-                  />
-                </div>
-              </div>
+        <button onClick={() => setOpenCreate(false)}>
+          <X size={18} />
+        </button>
+      </div>
 
-              {/* Password */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Password Baru</label>
-                <div className="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-2.5 focus-within:border-[#B45743] focus-within:ring-2 focus-within:ring-[#B45743]/10 transition-all">
-                  <KeyRound size={14} className="text-gray-400 shrink-0" />
-                  <input
-                    type="password"
-                    value={editForm.password}
-                    onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-                    className="w-full bg-transparent text-sm text-gray-800 outline-none placeholder-gray-300"
-                    placeholder="Kosongkan jika tidak diubah"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-400 mt-0.5 pl-1">Biarkan kosong jika tidak ingin mengubah password</p>
-              </div>
-            </div>
+      <div className="p-6 space-y-4">
 
-            {/* Modal Footer */}
-            <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-              <button
-                onClick={() => setOpenEdit(false)}
-                className="flex-1 h-9 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-all"
-              >
-                Batal
-              </button>
-              <button
-                onClick={handleUpdateAdmin}
-                className="flex-1 h-9 rounded-xl bg-[#B45743] hover:bg-[#a04d3b] active:scale-95 text-sm font-semibold text-white transition-all shadow-sm"
-              >
-                Simpan Perubahan
-              </button>
-            </div>
+        <input
+          type="text"
+          placeholder="Nama Admin"
+          value={createForm.name}
+          onChange={(e) =>
+            setCreateForm({
+              ...createForm,
+              name: e.target.value,
+            })
+          }
+          className="w-full border rounded-xl px-4 py-3"
+        />
 
-          </div>
-        </div>
-      )}
+        <input
+          type="email"
+          placeholder="Email"
+          value={createForm.email}
+          onChange={(e) =>
+            setCreateForm({
+              ...createForm,
+              email: e.target.value,
+            })
+          }
+          className="w-full border rounded-xl px-4 py-3"
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={createForm.password}
+          onChange={(e) =>
+            setCreateForm({
+              ...createForm,
+              password: e.target.value,
+            })
+          }
+          className="w-full border rounded-xl px-4 py-3"
+        />
+
+      </div>
+
+      <div className="flex gap-3 p-6 border-t">
+
+        <button
+          onClick={() => setOpenCreate(false)}
+          className="flex-1 border rounded-xl py-3"
+        >
+          Batal
+        </button>
+
+        <button
+          onClick={handleCreateAdmin}
+          className="flex-1 bg-[#B45743] text-white rounded-xl py-3"
+        >
+          Tambah Admin
+        </button>
+
+      </div>
 
     </div>
-  );
+  </div>
+)}
+</div>
+);
 }
+
+     
