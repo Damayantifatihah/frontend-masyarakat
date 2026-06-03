@@ -10,8 +10,6 @@ interface Kategori {
 
 interface FormData {
   nama: string;
-  prioritas: string;
-  aktif: boolean;
 }
 
 interface ModalProps {
@@ -93,10 +91,10 @@ const BRAND_MID = "#D4806A";
 
 function Modal({ onClose, editData }: ModalProps) {
   const [form, setForm] = useState<FormData>(
-    editData
-      ? { nama: editData.name, prioritas: "AKTIF", aktif: true }
-      : { nama: "", prioritas: "AKTIF", aktif: true }
-  );
+  editData
+    ? { nama: editData.name }
+    : { nama: "" }
+);
 
   const handleSubmit = async () => {
     try {
@@ -185,31 +183,6 @@ function Modal({ onClose, editData }: ModalProps) {
                 onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
               />
             </div>
-
-            <div>
-              <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#374151", marginBottom: 8 }}>
-                Status
-              </label>
-              <div style={{ display: "flex", gap: 8 }}>
-                {(["AKTIF", "NON-AKTIF", "PRIORITAS"] as const).map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setForm({ ...form, prioritas: s })}
-                    style={{
-                      flex: 1, padding: "8px 6px",
-                      borderRadius: 9, fontSize: 11.5, fontWeight: 600,
-                      cursor: "pointer",
-                      border: form.prioritas === s ? `1.5px solid ${BRAND}` : "1.5px solid #E5E7EB",
-                      background: form.prioritas === s ? BRAND_LIGHT : "#F9FAFB",
-                      color: form.prioritas === s ? BRAND : "#9CA3AF",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -246,7 +219,6 @@ export default function KelolaKategori() {
   const [showModal, setShowModal] = useState(false);
   const [editData, setEditData] = useState<Kategori | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filter, setFilter] = useState("SEMUA");
   const [kategori, setKategori] = useState<Kategori[]>([]);
   const [konfirmasiHapus, setKonfirmasiHapus] = useState<number | null>(null);
 
@@ -275,32 +247,24 @@ export default function KelolaKategori() {
     }
   };
 
-  const stats = [
-    {
-      label: "Total Kategori",
-      value: kategori.length,
-      sub: "Kategori tersedia",
-      Icon: IconFolder,
-      accent: BRAND,
-      bg: BRAND_LIGHT,
-    },
-    {
-      label: "Data Aktif",
-      value: kategori.length,
-      sub: "Siap digunakan",
-      Icon: IconLayers,
-      accent: "#2563EB",
-      bg: "#EFF6FF",
-    },
-    {
-      label: "Total Laporan",
-      value: kategori.length,
-      sub: "Semua kategori",
-      Icon: IconFileText,
-      accent: "#16A34A",
-      bg: "#F0FDF4",
-    },
-  ];
+ const stats = [
+  {
+    label: "Total Kategori",
+    value: kategori.length,
+    sub: "Kategori tersedia",
+    Icon: IconFolder,
+    accent: BRAND,
+    bg: BRAND_LIGHT,
+  },
+  {
+    label: "Kategori Terbaru",
+    value: kategori[0]?.id || "-",
+    sub: "Data terbaru",
+    Icon: IconLayers,
+    accent: "#2563EB",
+    bg: "#EFF6FF",
+  },
+];
 
   return (
     <>
@@ -429,29 +393,6 @@ export default function KelolaKategori() {
                 transition: "border-color 0.15s, box-shadow 0.15s",
               }}
             />
-          </div>
-
-          <div style={{
-            display: "flex", background: "#fff",
-            border: "1.5px solid #E5E7EB",
-            borderRadius: 10, overflow: "hidden",
-          }}>
-            {["SEMUA", "AKTIF", "NON-AKTIF"].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                style={{
-                  padding: "8px 16px", border: "none",
-                  fontSize: 12, fontWeight: 600, cursor: "pointer",
-                  transition: "all 0.15s",
-                  background: filter === f ? BRAND : "transparent",
-                  color: filter === f ? "#fff" : "#6B7280",
-                  fontFamily: "inherit",
-                }}
-              >
-                {f}
-              </button>
-            ))}
           </div>
 
           <span style={{ marginLeft: "auto", fontSize: 12.5, color: "#9CA3AF", fontWeight: 500 }}>

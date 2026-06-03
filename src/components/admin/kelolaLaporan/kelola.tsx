@@ -2,16 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
+import { Search, MapPin, User, Calendar, Check, X } from "lucide-react";
 
 // ─────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────
 
-type StatusDB =
-  | "verifikasi"
-  | "proses"
-  | "selesai"
-  | "ditolak";
+type StatusDB = "verifikasi" | "proses" | "selesai" | "ditolak";
 
 interface Laporan {
   id: number;
@@ -21,279 +18,112 @@ interface Laporan {
   lokasi: string;
   gambar: string | string[] | null;
   status: StatusDB;
-  category_id: number;
-  user_id: number;
   user_name: string;
   category_name: string;
   tanggapan?: string;
 }
 
-function getGambarItems(
-  gambar: string | string[] | null
-): string[] {
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+
+function parseGambar(gambar: string | string[] | null): string[] {
   if (!gambar) return [];
+  if (Array.isArray(gambar)) return gambar;
+  try { const p = JSON.parse(gambar); return Array.isArray(p) ? p : [gambar]; }
+  catch { return [gambar]; }
+}
 
-  if (Array.isArray(gambar)) {
-    return gambar;
-  }
-
-  try {
-    const parsed = JSON.parse(gambar);
-
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-
-    return [gambar];
-  } catch {
-    return [gambar];
-  }
+function formatDate(raw: string) {
+  try { return new Date(raw).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" }); }
+  catch { return raw; }
 }
 
 // ─────────────────────────────────────────────
-// STATUS CONFIG
+// CONFIG
 // ─────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<
-  StatusDB,
-  {
-    label: string;
-    color: string;
-    bg: string;
-    headerBg: string;
-    emptyIcon: string;
-  }
-> = {
+const STATUS_CFG: Record<StatusDB, {
+  label: string;
+  bar: string;
+  badgeBg: string; badgeText: string; badgeBorder: string;
+  tabBg: string; tabText: string; tabBorder: string;
+  emptyIcon: string;
+}> = {
   verifikasi: {
-    label: "Menunggu Verifikasi",
-    color: "text-blue-600",
-    bg: "bg-blue-50 border-blue-100",
-    headerBg: "from-blue-400 to-blue-500",
+    label: "Menunggu Verifikasi", bar: "bg-blue-500",
+    badgeBg: "bg-blue-50", badgeText: "text-blue-700", badgeBorder: "border-blue-200",
+    tabBg: "bg-blue-50", tabText: "text-blue-700", tabBorder: "border-blue-300",
     emptyIcon: "🔍",
   },
-
   proses: {
-    label: "Sedang Diproses",
-    color: "text-amber-600",
-    bg: "bg-amber-50 border-amber-100",
-    headerBg: "from-amber-400 to-orange-400",
+    label: "Sedang Diproses", bar: "bg-amber-500",
+    badgeBg: "bg-amber-50", badgeText: "text-amber-700", badgeBorder: "border-amber-200",
+    tabBg: "bg-amber-50", tabText: "text-amber-700", tabBorder: "border-amber-300",
     emptyIcon: "⚙️",
   },
-
   selesai: {
-    label: "Selesai",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50 border-emerald-100",
-    headerBg: "from-emerald-400 to-teal-500",
+    label: "Selesai", bar: "bg-emerald-500",
+    badgeBg: "bg-emerald-50", badgeText: "text-emerald-700", badgeBorder: "border-emerald-200",
+    tabBg: "bg-emerald-50", tabText: "text-emerald-700", tabBorder: "border-emerald-300",
     emptyIcon: "✅",
   },
-
   ditolak: {
-    label: "Ditolak",
-    color: "text-red-600",
-    bg: "bg-red-50 border-red-100",
-    headerBg: "from-red-400 to-rose-500",
+    label: "Ditolak", bar: "bg-red-500",
+    badgeBg: "bg-red-50", badgeText: "text-red-700", badgeBorder: "border-red-200",
+    tabBg: "bg-red-50", tabText: "text-red-700", tabBorder: "border-red-300",
     emptyIcon: "🚫",
   },
 };
 
-const KATEGORI_COLOR: Record<
-  string,
-  string
-> = {
-  Infrastruktur:
-    "bg-violet-50 text-violet-600 border-violet-100",
-
-  "Lalu Lintas":
-    "bg-sky-50 text-sky-600 border-sky-100",
-
-  Lingkungan:
-    "bg-teal-50 text-teal-600 border-teal-100",
-};
-
-const STATUS_ORDER: StatusDB[] = [
-  "verifikasi",
-  "proses",
-  "selesai",
-  "ditolak",
-];
+const STATUS_ORDER: StatusDB[] = ["verifikasi", "proses", "selesai", "ditolak"];
 
 // ─────────────────────────────────────────────
-// ICONS
+// TANGGAPAN DIALOG
 // ─────────────────────────────────────────────
 
-const IconSearch = () => (
-  <svg
-    className="w-4 h-4"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <circle cx="11" cy="11" r="8" />
-    <path d="m21 21-4.35-4.35" />
-  </svg>
-);
-
-const IconCalendar = () => (
-  <svg
-    className="w-3.5 h-3.5"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <rect
-      width="18"
-      height="18"
-      x="3"
-      y="4"
-      rx="2"
-    />
-    <line x1="16" x2="16" y1="2" y2="6" />
-    <line x1="8" x2="8" y1="2" y2="6" />
-    <line x1="3" x2="21" y1="10" y2="10" />
-  </svg>
-);
-
-const IconPin = () => (
-  <svg
-    className="w-3.5 h-3.5"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-);
-
-const IconUser = () => (
-  <svg
-    className="w-3.5 h-3.5"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <circle cx="12" cy="8" r="4" />
-    <path d="M20 21a8 8 0 1 0-16 0" />
-  </svg>
-);
-
-const Spinner = ({
-  size = "md",
-}: {
-  size?: "sm" | "md";
-}) => (
-  <svg
-    className={`animate-spin text-gray-400 ${
-      size === "sm"
-        ? "w-4 h-4"
-        : "w-5 h-5"
-    }`}
-    viewBox="0 0 24 24"
-  >
-    <circle
-      className="opacity-20"
-      cx="12"
-      cy="12"
-      r="10"
-      stroke="currentColor"
-      strokeWidth="4"
-      fill="none"
-    />
-
-    <path
-      className="opacity-70"
-      fill="currentColor"
-      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-    />
-  </svg>
-);
-
-// ─────────────────────────────────────────────
-// DIALOG TANGGAPAN
-// ─────────────────────────────────────────────
-
-function TanggapanDialog({
-  type,
-  loading,
-  onCancel,
-  onSubmit,
-}: {
-  type: "approve" | "reject";
-  loading: boolean;
-  onCancel: () => void;
-  onSubmit: (
-    tanggapan: string
-  ) => void;
+function TanggapanDialog({ type, loading, onCancel, onSubmit }: {
+  type: "approve" | "reject"; loading: boolean;
+  onCancel: () => void; onSubmit: (t: string) => void;
 }) {
-  const [tanggapan, setTanggapan] =
-    useState("");
-
+  const [tanggapan, setTanggapan] = useState("");
   const isApprove = type === "approve";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={onCancel}
-      />
-
-      <div className="relative bg-white w-full max-w-lg rounded-3xl shadow-xl p-6">
-        <h2 className="text-xl font-bold text-gray-800">
-          {isApprove
-            ? "Terima Laporan"
-            : "Tolak Laporan"}
-        </h2>
-
-        <p className="text-sm text-gray-400 mt-1">
-          Berikan tanggapan admin
-        </p>
-
-        <textarea
-          value={tanggapan}
-          onChange={(e) =>
-            setTanggapan(e.target.value)
-          }
-          placeholder="Tulis tanggapan..."
-          className="w-full mt-5 min-h-[140px] rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm outline-none text-gray-800 focus:ring-2 focus:ring-gray-200 resize-none"
-        />
-
-        <div className="flex gap-3 mt-5">
-          <button
-            onClick={onCancel}
-            className="flex-1 h-11 rounded-2xl bg-gray-100 hover:bg-gray-200 text-sm font-semibold"
-          >
-            Batal
+      <div className="absolute inset-0 bg-black/35 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white w-full max-w-[480px] rounded-2xl shadow-2xl overflow-hidden">
+        <div className={`px-6 py-5 flex items-center justify-between ${isApprove ? "bg-emerald-500" : "bg-red-500"}`}>
+          <div>
+            <h2 className="text-[15px] font-bold text-white">{isApprove ? "Terima Laporan" : "Tolak Laporan"}</h2>
+            <p className="text-xs text-white/75 mt-0.5">Berikan tanggapan untuk pengguna</p>
+          </div>
+          <button onClick={onCancel} className="w-8 h-8 rounded-lg bg-white/20 border-none text-white cursor-pointer flex items-center justify-center hover:bg-white/30 transition-colors">
+            <X size={16} />
           </button>
-
-          <button
-            disabled={
-              loading ||
-              !tanggapan.trim()
-            }
-            onClick={() =>
-              onSubmit(tanggapan)
-            }
-            className={`flex-1 h-11 rounded-2xl text-white text-sm font-semibold ${
-              isApprove
-                ? "bg-emerald-500 hover:bg-emerald-600"
-                : "bg-red-500 hover:bg-red-600"
-            } disabled:opacity-50`}
-          >
-            {loading ? (
-              <div className="flex justify-center">
-                <Spinner size="sm" />
-              </div>
-            ) : isApprove ? (
-              "Terima"
-            ) : (
-              "Tolak"
-            )}
-          </button>
+        </div>
+        <div className="p-6 flex flex-col gap-4">
+          <textarea
+            value={tanggapan}
+            onChange={(e) => setTanggapan(e.target.value)}
+            placeholder="Tulis tanggapan admin untuk pelapor..."
+            rows={4}
+            className="w-full rounded-xl border-[1.5px] border-gray-200 px-4 py-3 text-sm resize-none outline-none font-[inherit] text-gray-700 focus:border-[#B45743] transition-colors leading-relaxed"
+          />
+          <div className="flex gap-3">
+            <button onClick={onCancel} className="flex-1 h-11 rounded-xl border-[1.5px] border-gray-200 bg-white text-sm font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors font-[inherit]">
+              Batal
+            </button>
+            <button
+              disabled={loading || !tanggapan.trim()}
+              onClick={() => onSubmit(tanggapan)}
+              className={`flex-[2] h-11 rounded-xl border-none text-sm font-bold text-white cursor-pointer flex items-center justify-center gap-1.5 transition-colors font-[inherit] disabled:opacity-60 disabled:cursor-not-allowed ${isApprove ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-500 hover:bg-red-600"}`}>
+              {loading
+                ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                : isApprove ? <><Check size={14} /> Terima</> : <><X size={14} /> Tolak</>
+              }
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -301,206 +131,102 @@ function TanggapanDialog({
 }
 
 // ─────────────────────────────────────────────
-// LAPORAN ROW
+// LAPORAN CARD
 // ─────────────────────────────────────────────
 
-function LaporanRow({
-  laporan,
-  onStatusChange,
-}: {
+function LaporanCard({ laporan, onStatusChange }: {
   laporan: Laporan;
-  onStatusChange: (
-    id: number,
-    status: StatusDB,
-    tanggapan?: string
-  ) => Promise<void>;
+  onStatusChange: (id: number, status: StatusDB, tanggapan?: string) => Promise<void>;
 }) {
-  const cfg = STATUS_CONFIG[laporan.status];
+  const cfg = STATUS_CFG[laporan.status];
+  const images = parseGambar(laporan.gambar);
+  const [dialog, setDialog] = useState<"approve" | "reject" | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const gambarItems = getGambarItems(
-    laporan.gambar
-  );
-
-  const [dialog, setDialog] =
-    useState<
-      "approve" | "reject" | null
-    >(null);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const handleSubmit = async (
-    status: StatusDB,
-    tanggapan: string
-  ) => {
-    try {
-      setLoading(true);
-
-      await onStatusChange(
-        laporan.id,
-        status,
-        tanggapan
-      );
-
-      setDialog(null);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
+  const handleSubmit = async (status: StatusDB, tanggapan: string) => {
+    try { setLoading(true); await onStatusChange(laporan.id, status, tanggapan); setDialog(null); }
+    finally { setLoading(false); }
   };
 
   return (
     <>
-      <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
-        <div
-          className={`h-1 bg-gradient-to-r ${cfg.headerBg}`}
-        />
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
+        <div className={`h-[3px] ${cfg.bar}`} />
 
         <div className="p-5">
-          {/* BADGES */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="px-2 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-500">
+          {/* Badges */}
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            <span className="px-2.5 py-1 rounded-full bg-gray-100 text-[11px] font-semibold text-gray-500">
               #{laporan.id}
             </span>
-
-            <span
-              className={`px-3 py-1 rounded-full border text-xs font-semibold ${cfg.bg} ${cfg.color}`}
-            >
+            <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border ${cfg.badgeBg} ${cfg.badgeText} ${cfg.badgeBorder}`}>
               {cfg.label}
             </span>
-
-            <span
-              className={`px-3 py-1 rounded-full border text-xs font-semibold ${
-                KATEGORI_COLOR[
-                  laporan.category_name
-                ] ||
-                "bg-gray-50 text-gray-500 border-gray-100"
-              }`}
-            >
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#F9EAE7] text-[#8B3A2A] border border-[#F0D0C8]">
               {laporan.category_name}
             </span>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* GAMBAR */}
-            {gambarItems.length > 0 && (
-              <div className="grid grid-cols-2 gap-2 w-full md:w-[220px]">
-                {gambarItems
-                  .slice(0, 4)
-                  .map((img, index) => (
-                    <div
-                      key={index}
-                      className="h-28 rounded-2xl overflow-hidden border border-gray-100"
-                    >
-                      <img
-                        src={img}
-                        alt={`gambar-${index}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
+          <div className="flex gap-4 flex-wrap">
+            {/* Images */}
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 gap-1.5 w-[196px] shrink-0">
+                {images.slice(0, 4).map((img, i) => (
+                  <div key={i} className="h-[88px] rounded-xl overflow-hidden border border-gray-100">
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* CONTENT */}
-            <div className="flex-1">
-              <h2 className="font-bold text-lg text-gray-800">
-                {laporan.judul_laporan}
-              </h2>
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-[15px] font-bold text-gray-900">{laporan.judul_laporan}</h2>
+              <p className="text-sm text-gray-500 mt-1.5 leading-relaxed whitespace-pre-line line-clamp-3">{laporan.isi_laporan}</p>
 
-              <p className="text-sm text-gray-500 mt-2 whitespace-pre-line">
-                {laporan.isi_laporan}
-              </p>
-
-              {/* META */}
-              <div className="flex flex-wrap gap-4 mt-4 text-xs text-gray-400">
-                <span className="flex items-center gap-1">
-                  <IconUser />
-                  {laporan.user_name}
-                </span>
-
-                <span className="flex items-center gap-1">
-                  <IconPin />
-                  {laporan.lokasi}
-                </span>
-
-                <span className="flex items-center gap-1">
-                  <IconCalendar />
-                  {new Date(
-                    laporan.tanggal_kejadian
-                  ).toLocaleDateString(
-                    "id-ID",
-                    {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    }
-                  )}
-                </span>
+              {/* Meta */}
+              <div className="flex flex-wrap gap-3 mt-3">
+                {[
+                  { Icon: User,     val: laporan.user_name },
+                  { Icon: MapPin,   val: laporan.lokasi },
+                  { Icon: Calendar, val: formatDate(laporan.tanggal_kejadian) },
+                ].map(({ Icon, val }) => (
+                  <span key={val} className="flex items-center gap-1 text-xs text-gray-400">
+                    <Icon size={12} /> {val}
+                  </span>
+                ))}
               </div>
 
-              {/* TANGGAPAN */}
+              {/* Tanggapan */}
               {laporan.tanggapan && (
-                <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50 p-4">
-                  <p className="text-xs font-bold text-orange-700 mb-1">
-                    Tanggapan Admin
-                  </p>
-
-                  <p className="text-sm text-gray-700 whitespace-pre-line">
-                    {laporan.tanggapan}
-                  </p>
+                <div className="mt-3 rounded-xl bg-[#F9EAE7] border border-[#F0D0C8] px-4 py-3">
+                  <p className="text-[11px] font-bold text-[#8B3A2A] mb-1">Tanggapan Admin</p>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{laporan.tanggapan}</p>
                 </div>
               )}
 
-              {/* ACTION */}
-              <div className="flex flex-wrap gap-2 mt-5">
-                {laporan.status ===
-                  "verifikasi" && (
+              {/* Actions */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                {laporan.status === "verifikasi" && (
                   <>
-                    <button
-                      onClick={() =>
-                        setDialog("approve")
-                      }
-                      className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold"
-                    >
-                      Terima + Tanggapan
+                    <button onClick={() => setDialog("approve")}
+                      className="h-9 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold border-none cursor-pointer flex items-center gap-1.5 transition-colors font-[inherit]">
+                      <Check size={13} /> Terima
                     </button>
-
-                    <button
-                      onClick={() =>
-                        setDialog("reject")
-                      }
-                      className="h-10 px-4 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 text-sm font-semibold"
-                    >
-                      Tolak + Tanggapan
+                    <button onClick={() => setDialog("reject")}
+                      className="h-9 px-4 rounded-lg bg-white border-[1.5px] border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold cursor-pointer flex items-center gap-1.5 transition-colors font-[inherit]">
+                      <X size={13} /> Tolak
                     </button>
                   </>
                 )}
-
-                {laporan.status ===
-                  "proses" && (
-                  <button
-                    onClick={() =>
-                      handleSubmit(
-                        "selesai",
-                        laporan.tanggapan ||
-                          "Laporan selesai ditangani."
-                      )
-                    }
-                    className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold"
-                  >
-                    Selesaikan
+                {laporan.status === "proses" && (
+                  <button onClick={() => handleSubmit("selesai", laporan.tanggapan || "Laporan selesai ditangani.")}
+                    className="h-9 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold border-none cursor-pointer flex items-center gap-1.5 transition-colors font-[inherit]">
+                    <Check size={13} /> Selesaikan
                   </button>
                 )}
-
-                {(laporan.status ===
-                  "selesai" ||
-                  laporan.status ===
-                    "ditolak") && (
-                  <span className="text-xs italic text-gray-400">
-                    Tidak ada tindakan
-                  </span>
+                {(laporan.status === "selesai" || laporan.status === "ditolak") && (
+                  <span className="text-xs text-gray-400 italic self-center">Tidak ada tindakan</span>
                 )}
               </div>
             </div>
@@ -508,51 +234,14 @@ function LaporanRow({
         </div>
       </div>
 
-      {/* DIALOG */}
       {dialog && (
         <TanggapanDialog
-          type={dialog}
-          loading={loading}
-          onCancel={() =>
-            setDialog(null)
-          }
-          onSubmit={(tanggapan) =>
-            handleSubmit(
-              dialog === "approve"
-                ? "proses"
-                : "ditolak",
-              tanggapan
-            )
-          }
+          type={dialog} loading={loading}
+          onCancel={() => setDialog(null)}
+          onSubmit={(t) => handleSubmit(dialog === "approve" ? "proses" : "ditolak", t)}
         />
       )}
     </>
-  );
-}
-
-// ─────────────────────────────────────────────
-// EMPTY STATE
-// ─────────────────────────────────────────────
-
-function EmptyState({
-  status,
-}: {
-  status: StatusDB;
-}) {
-  return (
-    <div className="py-20 text-center">
-      <div className="text-5xl mb-4">
-        {STATUS_CONFIG[status].emptyIcon}
-      </div>
-
-      <h3 className="font-bold text-gray-700">
-        Tidak ada laporan
-      </h3>
-
-      <p className="text-sm text-gray-400 mt-1">
-        Data laporan akan muncul di sini
-      </p>
-    </div>
   );
 }
 
@@ -561,155 +250,84 @@ function EmptyState({
 // ─────────────────────────────────────────────
 
 export default function KelolaLaporan() {
-  const [data, setData] = useState<
-    Laporan[]
-  >([]);
+  const [data, setData]           = useState<Laporan[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState("");
+  const [activeTab, setActiveTab] = useState<StatusDB>("verifikasi");
 
-  const [loading, setLoading] =
-    useState(true);
+  const fetchLaporan = useCallback(async () => {
+    try { setLoading(true); const res = await api.get("/laporan"); setData(res.data?.data || res.data || []); }
+    catch (err) { console.log(err); }
+    finally { setLoading(false); }
+  }, []);
 
-  const [search, setSearch] =
-    useState("");
+  useEffect(() => { fetchLaporan(); }, [fetchLaporan]);
 
-  const [activeTab, setActiveTab] =
-    useState<StatusDB>("verifikasi");
-
-  const fetchLaporan = useCallback(
-    async () => {
-      try {
-        setLoading(true);
-
-        const res = await api.get(
-          "/laporan"
-        );
-
-        const result =
-          res.data?.data ||
-          res.data ||
-          [];
-
-        setData(result);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    fetchLaporan();
+  const handleStatusChange = useCallback(async (id: number, status: StatusDB, tanggapan?: string) => {
+    await api.patch(`/laporan/${id}/status`, { status, tanggapan });
+    await fetchLaporan();
   }, [fetchLaporan]);
 
-  const handleStatusChange =
-    useCallback(
-      async (
-        id: number,
-        status: StatusDB,
-        tanggapan?: string
-      ) => {
-        try {
-          await api.patch(
-            `/laporan/${id}/status`,
-            {
-              status,
-              tanggapan,
-            }
-          );
-
-          await fetchLaporan();
-        } catch (error) {
-          console.log(error);
-        }
-      },
-      [fetchLaporan]
-    );
-
-  const filtered = data.filter(
-    (item) => {
-      const searchValue =
-        search.toLowerCase();
-
-      return (
-        item.status === activeTab &&
-        (item.judul_laporan
-          ?.toLowerCase()
-          .includes(searchValue) ||
-          item.user_name
-            ?.toLowerCase()
-            .includes(searchValue) ||
-          String(item.id).includes(
-            searchValue
-          ))
-      );
-    }
+  const countOf = (s: StatusDB) => data.filter((d) => d.status === s).length;
+  const filtered = data.filter((item) =>
+    item.status === activeTab && (
+      item.judul_laporan?.toLowerCase().includes(search.toLowerCase()) ||
+      item.user_name?.toLowerCase().includes(search.toLowerCase()) ||
+      String(item.id).includes(search)
+    )
   );
 
-  const totalByStatus = (
-    status: StatusDB
-  ) =>
-    data.filter(
-      (item) => item.status === status
-    ).length;
-
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
-      {/* HEADER */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-5">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black text-gray-900">
-                Kelola Laporan
-              </h1>
+    <div className="min-h-screen bg-[#F8F8F8]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-              <p className="text-sm text-gray-400 mt-1">
-                Verifikasi dan kelola
-                laporan masyarakat
-              </p>
+      {/* ── HEADER ── */}
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+        <div className="max-w-5xl mx-auto px-7 py-5">
+
+          {/* Title row */}
+          <div className="flex items-center justify-between gap-4 mb-5">
+            <div>
+              <h1 className="text-xl font-extrabold text-gray-900">Kelola Laporan</h1>
+              <p className="text-[13px] text-gray-400 mt-0.5">Verifikasi dan kelola laporan masyarakat</p>
             </div>
 
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300">
-                <IconSearch />
-              </span>
-
+            {/* Search */}
+            <div className="flex items-center gap-2 bg-gray-50 border-[1.5px] border-gray-200 rounded-xl px-3.5 py-2.5 w-[260px] focus-within:border-[#B45743] focus-within:bg-white transition-colors">
+              <Search size={15} className="text-gray-400 shrink-0" />
               <input
                 type="text"
                 value={search}
-                onChange={(e) =>
-                  setSearch(e.target.value)
-                }
-                placeholder="Cari laporan..."
-                className="h-11 pl-10 pr-4 rounded-2xl border border-gray-200 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-gray-200"
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari judul, nama, atau ID..."
+                className="flex-1 bg-transparent text-[13px] text-gray-800 outline-none placeholder:text-gray-400 font-[inherit]"
               />
+              {search && (
+                <button onClick={() => setSearch("")} className="text-gray-400 hover:text-gray-600 transition-colors border-none bg-transparent cursor-pointer p-0">
+                  <X size={14} />
+                </button>
+              )}
             </div>
           </div>
 
-          {/* TABS */}
-          <div className="flex gap-2 overflow-x-auto mt-6">
-            {STATUS_ORDER.map((status) => {
-              const cfg =
-                STATUS_CONFIG[status];
-
-              const isActive =
-                activeTab === status;
-
+          {/* Tabs */}
+          <div className="flex gap-2 overflow-x-auto">
+            {STATUS_ORDER.map((s) => {
+              const c = STATUS_CFG[s];
+              const active = activeTab === s;
+              const count = countOf(s);
               return (
-                <button
-                  key={status}
-                  onClick={() =>
-                    setActiveTab(status)
-                  }
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition ${
-                    isActive
-                      ? `${cfg.bg} ${cfg.color} border`
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                  }`}
-                >
-                  {cfg.label} (
-                  {totalByStatus(status)})
+                <button key={s} onClick={() => setActiveTab(s)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-bold whitespace-nowrap cursor-pointer border-[1.5px] transition-all font-[inherit] ${
+                    active
+                      ? `${c.tabBg} ${c.tabText} ${c.tabBorder}`
+                      : "border-gray-100 bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-200"
+                  }`}>
+                  {c.label}
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                    active ? "bg-white/60" : "bg-gray-100 text-gray-500"
+                  }`}>
+                    {count}
+                  </span>
                 </button>
               );
             })}
@@ -717,26 +335,23 @@ export default function KelolaLaporan() {
         </div>
       </div>
 
-      {/* CONTENT */}
-      <div className="max-w-6xl mx-auto px-6 py-6">
+      {/* ── CONTENT ── */}
+      <div className="max-w-5xl mx-auto px-7 py-6">
         {loading ? (
-          <div className="flex justify-center py-20">
-            <Spinner />
+          <div className="text-center py-16">
+            <div className="w-7 h-7 rounded-full border-2 border-[#F0D0C8] border-t-[#B45743] animate-spin mx-auto mb-3" />
+            <p className="text-[13px] text-gray-400">Memuat laporan...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyState
-            status={activeTab}
-          />
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="text-4xl mb-3">{STATUS_CFG[activeTab].emptyIcon}</div>
+            <p className="text-[15px] font-bold text-gray-700">Tidak ada laporan</p>
+            <p className="text-[13px] text-gray-400 mt-1">Data laporan akan muncul di sini</p>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex flex-col gap-3">
             {filtered.map((laporan) => (
-              <LaporanRow
-                key={laporan.id}
-                laporan={laporan}
-                onStatusChange={
-                  handleStatusChange
-                }
-              />
+              <LaporanCard key={laporan.id} laporan={laporan} onStatusChange={handleStatusChange} />
             ))}
           </div>
         )}
