@@ -2,21 +2,74 @@
 
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import api from "@/lib/axios";
 
-interface WelcomeSectionProps {
-  totalLaporan?: number;
-  diproses?: number;
-  selesai?: number;
-  ditolak?: number;
-}
-
-export default function WelcomeSection({
-  totalLaporan = 12,
-  diproses = 2,
-  selesai = 7,
-  ditolak = 1,
-}: WelcomeSectionProps) {
+export default function DashboardSection() {
   const { data: session } = useSession();
+
+
+  const [totalLaporan, setTotalLaporan] = useState(0);
+  const [verifikasi, setVerifikasi] = useState(0);
+  const [diproses, setDiproses] = useState(0);
+  const [selesai, setSelesai] = useState(0);
+  const [ditolak, setDitolak] = useState(0);
+
+  useEffect(() => {
+    const getStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await api.get("/laporan/saya", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log("RESPONSE:", res.data);
+
+        // karena backend return:
+        // { success:true, message:"Success", data:[...] }
+
+        const laporan = res.data.data || [];
+
+        setTotalLaporan(laporan.length);
+
+        setDiproses(
+          laporan.filter(
+            (item: any) =>
+              item.status === "proses"
+          ).length
+        );
+
+        setVerifikasi(
+          laporan.filter(
+            (item: any) =>
+              item.status === "verifikasi"
+          ).length
+        );
+
+        setSelesai(
+          laporan.filter(
+            (item: any) =>
+              item.status === "selesai"
+          ).length
+        );
+
+        setDitolak(
+          laporan.filter(
+            (item: any) =>
+              item.status === "ditolak"
+          ).length
+        );
+      } catch (error) {
+        console.log("ERROR STATS:", error);
+      }
+    };
+
+    getStats();
+  }, []);
+
   const userName = session?.user?.name || "User";
 
   const today = new Date().toLocaleDateString("id-ID", {
@@ -33,7 +86,16 @@ export default function WelcomeSection({
       iconBg: "#EFF6FF",
       iconColor: "#3B82F6",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
           <rect x="9" y="3" width="6" height="4" rx="1" />
           <line x1="9" y1="12" x2="15" y2="12" />
@@ -47,19 +109,63 @@ export default function WelcomeSection({
       iconBg: "#F0FDF4",
       iconColor: "#22C55E",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <circle cx="12" cy="12" r="10" />
           <polyline points="9 12 11 14 15 10" />
         </svg>
       ),
     },
+
+
+    {
+  label: "Menunggu Verifikasi",
+  value: verifikasi,
+  iconBg: "#EFF6FF",
+  iconColor: "#2563EB",
+  icon: (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v4" />
+      <path d="M12 16h.01" />
+    </svg>
+  ),
+},
+
+
     {
       label: "Sedang Diproses",
       value: diproses,
       iconBg: "#FFFBEB",
       iconColor: "#F59E0B",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
         </svg>
@@ -71,7 +177,16 @@ export default function WelcomeSection({
       iconBg: "#FEF2F2",
       iconColor: "#EF4444",
       icon: (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <circle cx="12" cy="12" r="10" />
           <line x1="15" y1="9" x2="9" y2="15" />
           <line x1="9" y1="9" x2="15" y2="15" />
@@ -159,7 +274,7 @@ export default function WelcomeSection({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
+          gridTemplateColumns: "repeat(5, 1fr)",
           gap: "14px",
         }}
       >

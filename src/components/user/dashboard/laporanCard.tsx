@@ -16,11 +16,42 @@ interface Props {
   };
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-  selesai:    { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500", label: "Selesai"   },
-  diproses:   { bg: "bg-amber-50",   text: "text-amber-700",   dot: "bg-amber-400",   label: "Diproses"  },
-  ditolak:    { bg: "bg-red-50",     text: "text-red-700",     dot: "bg-red-500",     label: "Ditolak"   },
-  verifikasi: { bg: "bg-blue-50",    text: "text-blue-700",    dot: "bg-blue-400",    label: "Menunggu"  },
+const STATUS_CONFIG: Record<
+  string,
+  {
+    bg: string;
+    text: string;
+    dot: string;
+    label: string;
+  }
+> = {
+  verifikasi: {
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    dot: "bg-blue-400",
+    label: "Menunggu",
+  },
+
+  proses: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    dot: "bg-amber-400",
+    label: "Diproses",
+  },
+
+  selesai: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    dot: "bg-emerald-500",
+    label: "Selesai",
+  },
+
+  ditolak: {
+    bg: "bg-red-50",
+    text: "text-red-700",
+    dot: "bg-red-500",
+    label: "Ditolak",
+  },
 };
 
 const AVATAR_COLORS = [
