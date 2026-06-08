@@ -293,7 +293,7 @@ export default function RegisterPage() {
                         ? "text"
                         : "password"
                     }
-                    placeholder="Min. 8 karakter"
+                    placeholder="Min. 6 karakter"
                     value={password}
                     onChange={(e) =>
                       setPassword(

@@ -157,6 +157,7 @@ function DonutChart({
 // KATEGORI BAR
 
 function KategoriBar({
+  
   data,
 }: {
   data: {
@@ -196,16 +197,25 @@ function KategoriBar({
 export default function AdminDashboard() {
   const [laporan, setLaporan] = useState<DashboardLaporan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
 
   const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
 
-      const res = await api.get("/laporan");
+ const [laporanRes, kategoriRes] =
+  await Promise.all([
+    api.get("/laporan"),
+    api.get("/categories"),
+  ]);
 
-      const result = res.data?.data ?? [];
+setLaporan(
+  laporanRes.data?.data ?? []
+);
 
-      setLaporan(result);
+setCategories(
+  kategoriRes.data?.data ?? []
+);
     } catch (err) {
       console.error(err);
     } finally {
@@ -255,23 +265,29 @@ export default function AdminDashboard() {
     {}
   );
 
-  const kategoriData = [
-    {
-      label: "Infrastruktur",
-      value: kategoriCount["Infrastruktur"] || 0,
-      color: "bg-violet-400",
-    },
-    {
-      label: "Lingkungan",
-      value: kategoriCount["Lingkungan"] || 0,
-      color: "bg-emerald-400",
-    },
-    {
-      label: "Lalu Lintas",
-      value: kategoriCount["Lalu Lintas"] || 0,
-      color: "bg-sky-400",
-    },
-  ];
+ const warnaKategori = [
+  "bg-violet-400",
+  "bg-emerald-400",
+  "bg-sky-400",
+  "bg-orange-400",
+  "bg-pink-400",
+  "bg-indigo-400",
+  "bg-yellow-400",
+];
+
+const kategoriData = categories.map(
+  (kategori: any, index) => ({
+    label: kategori.name,
+    value:
+      kategoriCount[
+        kategori.name
+      ] || 0,
+    color:
+      warnaKategori[
+        index % warnaKategori.length
+      ],
+  })
+);
 
   // STATS
 

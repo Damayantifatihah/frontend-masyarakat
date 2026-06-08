@@ -34,7 +34,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[270px] bg-white border-r border-gray-100 flex flex-col">
+    <aside className=" sticky top-0 h-screen w-[270px] bg-white border-r border-gray-100 flex flex-col">
       {/* Logo */}
       <div className="h-[80px] border-b border-gray-100 flex items-center px-6">
         <Image

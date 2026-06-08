@@ -16,20 +16,41 @@ export default function ProfilePage() {
 
   const [form, setForm] = useState({ email: "", password: "", bio: "" });
 
+
+  const fetchProfile = async () => {
+  try {
+    const res = await api.get("/auth/me");
+
+    const userData = res.data.user;
+
+    setUser(userData);
+
+    setForm({
+      email: userData.email || "",
+      password: "",
+      bio: userData.bio || "",
+    });
+
+
+    setPhoto(
+  userData.profile_photo || null
+);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+    useEffect(() => {
+  if (session) {
+    fetchProfile();
+  }
+}, [session]);
+
   const videoRef  = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  useEffect(() => {
-    if (session?.user) {
-      const savedBio = localStorage.getItem(`bio_${session.user.email}`) ||
-        "Aktif melaporkan permasalahan lingkungan dan fasilitas umum.";
-      setUser({ ...session.user, bio: savedBio });
-      setForm({ email: session.user.email || "", password: "", bio: savedBio });
-      const savedPhoto = localStorage.getItem(`profilePhoto_${session.user.email}`);
-      if (savedPhoto) setPhoto(savedPhoto);
-    }
-  }, [session]);
+
 
   const openCamera = async () => {
     try {
@@ -64,17 +85,16 @@ export default function ProfilePage() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.drawImage(video, 0, 0);
-    const imageData = canvas.toDataURL("image/png");
-    setPhoto(imageData);
-    if (session?.user?.email)
-      localStorage.setItem(`profilePhoto_${session.user.email}`, imageData);
+   const imageData =
+  canvas.toDataURL("image/png");
+
+setPhoto(imageData);
     window.dispatchEvent(new Event("profileUpdated"));
     stopCamera();
   };
 
   const removePhoto = () => {
     if (!session?.user?.email) return;
-    localStorage.removeItem(`profilePhoto_${session.user.email}`);
     setPhoto(null);
     window.dispatchEvent(new Event("profileUpdated"));
   };
@@ -87,18 +107,19 @@ export default function ProfilePage() {
     try {
       setLoading(true);
       const res = await api.put("/auth/profile", {
-        email: form.email, password: form.password, bio: form.bio,
+        email: form.email,
+        password: form.password,
+        bio: form.bio,
+        profile_photo: photo,
       });
-      const updatedUser = { ...user, ...res.data.user, bio: form.bio };
-      localStorage.setItem(`bio_${updatedUser.email}`, form.bio);
-      if (user.email !== updatedUser.email) localStorage.removeItem(`bio_${user.email}`);
-      if (photo) {
-        localStorage.setItem(`profilePhoto_${updatedUser.email}`, photo);
-        if (user.email !== updatedUser.email)
-          localStorage.removeItem(`profilePhoto_${user.email}`);
-      }
+      const updatedUser =
+      res.data.user;
       setUser(updatedUser);
-      setForm({ email: updatedUser.email, password: "", bio: form.bio });
+      setForm({
+      email: updatedUser.email,
+      password: "",
+      bio: updatedUser.bio || "",
+    });
       await update({ ...session, user: { ...session?.user, email: updatedUser.email } });
       window.dispatchEvent(new Event("profileUpdated"));
       setIsEditing(false);
@@ -204,17 +225,11 @@ export default function ProfilePage() {
                 <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                   <Mail size={11} /> Email
                 </label>
-                {isEditing ? (
-                  <input
-                    type="email" value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className={inputClass}
-                  />
-                ) : (
-                  <div className={readonlyClass}>{form.email}</div>
-                )}
-              </div>
 
+                <div className={readonlyClass}>
+                  {form.email}
+                </div>
+              </div>
               {/* Password */}
               <div className="flex flex-col gap-1.5">
                 <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">

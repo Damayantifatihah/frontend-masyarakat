@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { Home, FileText, BarChart2, LogOut } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
+import api from "@/lib/axios";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -41,20 +42,41 @@ function useScrolled(threshold = 40) {
 }
 
 function useProfile(email?: string | null) {
-  const [bio,   setBio]   = useState("");
+  const [bio, setBio] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     if (!email) return;
 
-    const load = () => {
-      setBio(localStorage.getItem(`bio_${email}`) ?? "");
-      setPhoto(localStorage.getItem(`profilePhoto_${email}`) ?? null);
-    };
+  const load = async () => {
+  try {
+    const res = await api.get("/auth/me");
+    const user = res.data.user;
+
+    console.log("USER:", user);
+
+    setBio(user.bio || "");
+
+    setPhoto(
+      user.profile_photo || null
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
 
     load();
-    window.addEventListener("profileUpdated", load);
-    return () => window.removeEventListener("profileUpdated", load);
+
+    window.addEventListener(
+      "profileUpdated",
+      load
+    );
+
+    return () =>
+      window.removeEventListener(
+        "profileUpdated",
+        load
+      );
   }, [email]);
 
   return { bio, photo };
@@ -62,12 +84,24 @@ function useProfile(email?: string | null) {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function Avatar({ photo, initials }: { photo: string | null; initials: string }) {
+function Avatar({
+  photo,
+  initials,
+}: {
+  photo: string | null;
+  initials: string;
+}) {
   return (
     <div className="w-10 h-10 rounded-full overflow-hidden bg-white/25 flex items-center justify-center text-sm font-bold text-white shrink-0">
-      {photo
-        ? <img src={photo} alt="Profile" className="w-full h-full object-cover" />
-        : initials}
+      {photo ? (
+        <img
+          src={photo}
+          alt="Profile"
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        initials
+      )}
     </div>
   );
 }
@@ -136,7 +170,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`w-[264px] min-h-screen bg-white border-r border-[#F0EFEF] flex flex-col shrink-0 overflow-hidden font-[Plus_Jakarta_Sans,Segoe_UI,sans-serif] transition-shadow duration-300
+      className= {` sticky top-0 w-[264px] min-h-screen bg-white border-r border-[#F0EFEF] flex flex-col shrink-0 overflow-hidden font-[Plus_Jakarta_Sans,Segoe_UI,sans-serif] transition-shadow duration-300
         ${scrolled ? "shadow-[4px_0_24px_rgba(180,87,67,0.10),2px_0_8px_rgba(0,0,0,0.06)]" : "shadow-none"}`}
     >
       {/* Logo */}
