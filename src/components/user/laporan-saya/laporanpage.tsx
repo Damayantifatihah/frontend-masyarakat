@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import api from "@/lib/axios";
 import {
   Search,
@@ -255,6 +256,7 @@ const formatStatus = (status: string): StatusKey => {
 // ─────────────────────────────────────────────
 
 export default function LaporanSaya() {
+  const { data: session } = useSession();
   const [laporan, setLaporan] = useState<Laporan[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Semua");
@@ -271,7 +273,7 @@ export default function LaporanSaya() {
       try {
         setLoading(true);
 
-        const token = localStorage.getItem("token");
+        const token = session?.user?.accessToken;
 
         if (!token) {
           setLaporan([]);
@@ -282,9 +284,12 @@ export default function LaporanSaya() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-      const data = res.data?.data || [];
+        console.log("STATUS:", res.status);
+        console.log("RES DATA:", JSON.stringify(res.data, null, 2));
 
-console.log("DATA PERTAMA:", data[0]);
+        const data = res.data?.data || [];
+
+        console.log("DATA PERTAMA:", data[0]);
 
         const formatted = data.map((item: any) => {
           console.log("GAMBAR:", item.gambar);
@@ -324,8 +329,8 @@ console.log("DATA PERTAMA:", data[0]);
       }
     };
 
-    fetchLaporan();
-  }, []);
+    if (session) fetchLaporan();
+  }, [session]);
 
   // ─────────────────────────────────────────
   // COUNT & FILTER
@@ -578,14 +583,15 @@ console.log("DATA PERTAMA:", data[0]);
                               key={idx}
                               className="aspect-square rounded-xl overflow-hidden border border-[#F0F0F0] bg-gray-100"
                             >
-                            <img
-  src={
-    img.startsWith("http")
-      ? img
-      : `http://localhost:5000/uploads/${img}`
-  }
-  alt={`Foto ${idx + 1}`}
-/>
+                              <img
+                                src={
+                                  img.startsWith("http")
+                                    ? img
+                                    : `http://localhost:5000/uploads/${img}`
+                                }
+                                alt={`Foto ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                           ))}
                         </div>
